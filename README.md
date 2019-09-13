@@ -1,7 +1,7 @@
 # Materials Project Backend Modularization Test
 
 ## A. Introduction & Purpose
-Michael Wu's second apprenticeship at LBNL, supervised by [Shyam Dwaraknath](https://www.linkedin.com/in/shyam-dwaraknath/)
+Michael Wu's second apprenticeship at LBNL, supervised & Mentored by [Shyam Dwaraknath](https://www.linkedin.com/in/shyam-dwaraknath/)
 
 Project's Goal is to explore how to make the Material Project's backend system to become more modular, ensuring that data transfer is more pipelined, and development of an individual component is standardized.
 

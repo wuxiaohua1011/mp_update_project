@@ -1,13 +1,6 @@
-from typing import Dict, List, Any
+from typing import Dict, List, Optional
 from pydantic import BaseModel
-
-
-class CreatedAt(BaseModel):
-    string: str
-
-
-class LastUpdated(BaseModel):
-    string: str
+from datetime import datetime
 
 
 class Lattice(BaseModel):
@@ -21,21 +14,21 @@ class Lattice(BaseModel):
     matrix: List[List[int]] = None
 
 
-class Specy(BaseModel):
+class Specie(BaseModel):
     element: str
-    occu: int
+    occu: float
 
 
 class Site(BaseModel):
     abc: List[float]
     label: str
-    species: List[Specy]
+    species: List[Specie]
     xyz: List[float]
     properties: Dict[str, int]
 
 
 class Structure(BaseModel):
-    charge: Any
+    charge: Optional[float] = None
     lattice: Lattice
     sites: List[Site]
 
@@ -52,9 +45,12 @@ class Symmetry(BaseModel):
 class BuiltTime(BaseModel):
     string: str
 
+class LastUpdated(BaseModel):
+    string: datetime
 
-class ID(BaseModel):
-    oid: str
+
+class CreatedAt(BaseModel):
+    string: datetime
 
 
 class Material(BaseModel):
@@ -74,4 +70,3 @@ class Material(BaseModel):
     task_id: str
     volume: float
     _built_time: BuiltTime
-    _id: ID

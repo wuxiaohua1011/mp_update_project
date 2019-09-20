@@ -11,6 +11,23 @@ Project's Goal is to explore how to make the Material Project's backend system t
 - [Dash](https://plot.ly/dash/)
 
 ## C. Progress
+
+### Sep 19, 2019
+- For the model's symmetry --> crystal_system --> make an enumeration since there's only these choices
+    - `["tetragonal","triclinic","orthorhombic","monoclinic","hexagonal","cubic","trigonal"]`
+    - Unable to achieve this task this week because after some research, it seems like adding additional checking into Pydantic models requires a lot of work
+        -  like i need to enforce this before it is being passed into the model, which complicates the matter, going to ask Shyam if he has any experience on this before i start
+- Find based on formula:
+    - `BiTiO3, BiO3Ti, TiBiO3` are equivalent
+    - done through using Pymatgen's `pymatgen.core.composition` class
+- put everything under common endpoint
+    - Done
+- Make a universial search at the root endpoint
+    - Done, it will redirect to its respective common endpoint, currently really naive logic, but it works
+    - ask Shyam if there's any edge cases that I am not considering
+
+
+
 #### Sep 13, 2019
 - Built a simple and rudimentary model based on the data Shyam provided. 
     - The Materials model is located at models.py, using Pydantic

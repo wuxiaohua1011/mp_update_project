@@ -12,6 +12,29 @@ Project's Goal is to explore how to make the Material Project's backend system t
 
 ## C. Progress
 
+### Sep 27, 2019
+- Use choices for crystal system
+    - Done
+
+- Switch to using Memory store to hold your documents and for all your searches
+    - Used JSONStore, which inherits MemoryStore
+- Try JSONStore as well
+    - JSONStore turns out to be really easy to use. 
+    - install the [maggma](https://github.com/materialsproject/maggma/blob/master/maggma/) repository by source
+    - see main.py for usage example, specifically the `get_on_task_id` function
+    - other function has not been modified yet, need to review if PyMongo already have some similar functions so that I am not re-inventing the wheel
+- How to see model definition in swagger
+    - Done
+    - It doesn't seem like GET would return any schema, but PUT does. 
+    - To see the result, please do
+        - `uvicorn main:app --reload`
+        - go to `http://127.0.0.1:8000/docs`
+        - OR `http://127.0.0.1:8000/redoc`
+5. Wildcards in chemsys and formula: Ba*O3 
+    - should match BaTiO3, BaEuO3, but not BaTi2O3, Ba-*-O should match Ba-Ti-O, Ba-Eu-O, etc. 
+    - Have not gotten to this part yet
+
+
 ### Sep 19, 2019
 - For the model's symmetry --> crystal_system --> make an enumeration since there's only these choices
     - `["tetragonal","triclinic","orthorhombic","monoclinic","hexagonal","cubic","trigonal"]`

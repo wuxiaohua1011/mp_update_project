@@ -1,50 +1,64 @@
+from monty.io import zopen
+import json
 from models import *
+from fastapi.encoders import jsonable_encoder
+from monty.serialization import loadfn
+from monty.json import jsanitize
 from fastapi import Path
 from starlette.responses import RedirectResponse, Response
 from pymatgen.core.composition import Composition
-from maggma.stores import JSONStore
+
+
+with zopen("data/more_mats.json") as f:
+    # data = f.read()
+    parsed = json.load(f)
+
+
+# parsed = loadfn("data/material_docs.json")
+# parsed = jsanitize(parsed, allow_bson=True)
+# print(parsed[1])
+# first_material = parsed[0]
+# first_material_model = Material(**first_material)
+
 from fastapi import FastAPI
 
-
 app = FastAPI()
-store = JSONStore("./data/more_mats.json")
-store.connect()
-
 
 @app.get("/")
 async def root():
-    collect = store.query()
-    return {"message": str(collect[0])}
+
+    return {"message": "Hey, Michael was here LOL"}
 
 
 @app.get("/materials/task_id/{task_id}")
 async def get_on_task_id(task_id: str = Path(..., title="The task_id of the item to get")):
-    cursor = store.query(criteria={"task_id": task_id})
-    return {"result": cursor[0]}
+    result = []
+    for material in parsed:
+        if material.get("task_id", None) == task_id:
+            result.append(Material(**material))
+    return {"result": result}
 
 
 @app.get("/materials/chemsys/{chemsys}")
 async def get_on_chemsys(chemsys: str = Path(..., title="The task_id of the item to get")):
-    raise Exception("NOT IMPLEMENTED")
     result = []
-    # input_chemsys_elements = set(chemsys.split("-"))
-    #
-    # for material in parsed:
-    #     material_chemsys = set(material.get("chemsys").split("-"))
-    #     if input_chemsys_elements == material_chemsys:
-    #         result.append(material)
+    input_chemsys_elements = set(chemsys.split("-"))
+
+    for material in parsed:
+        material_chemsys = set(material.get("chemsys").split("-"))
+        if input_chemsys_elements == material_chemsys:
+            result.append(material)
     return {"result": result}
 
 
 @app.get("/materials/formula/{formula}")
 async def get_on_formula(formula: str = Path(..., title="The formula of the item to get")):
-    raise Exception("NOT IMPLEMENTED")
     result = []
-    # user_composition = Composition(formula)
-    # for material in parsed:
-    #     current_composition = Composition(material.get("formula_pretty"))
-    #     if current_composition == user_composition:
-    #         result.append(material)
+    user_composition = Composition(formula)
+    for material in parsed:
+        current_composition = Composition(material.get("formula_pretty"))
+        if current_composition == user_composition:
+            result.append(material)
 
     return {"result": result}
 
@@ -60,11 +74,6 @@ async def get_on_materials(query: str = Path(...)):
     else:
         print("WARNING: Query <{}> does not match any of the endpoint features, returning to home".format(query))
         return RedirectResponse('/')
-
-
-@app.put("/items/{item_id}")
-def update_item(id: int, material: Material):
-    return {"chemsys": material.chemsys, "task_id": material.task_id}
 
 
 def is_task_id(query):
@@ -84,4 +93,4 @@ def is_formula(query):
 
 
 def is_chemsys(query):
-    return True  ## TODO split on dash, Composition(query),
+    return True ## TODO split on dash, Composition(query),

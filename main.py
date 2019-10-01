@@ -25,26 +25,31 @@ async def get_on_task_id(task_id: str = Path(..., title="The task_id of the item
 
 @app.get("/materials/chemsys/{chemsys}")
 async def get_on_chemsys(chemsys: str = Path(..., title="The task_id of the item to get")):
-    raise Exception("NOT IMPLEMENTED")
-    result = []
-    # input_chemsys_elements = set(chemsys.split("-"))
-    #
-    # for material in parsed:
-    #     material_chemsys = set(material.get("chemsys").split("-"))
-    #     if input_chemsys_elements == material_chemsys:
-    #         result.append(material)
+    cursor = None
+    if "*" in chemsys:
+        cursor = store.query(criteria={"chemsys": {"$regex": chemsys}})
+    else:
+        cursor = store.query(criteria={"chemsys": chemsys})
+
+    result = None if cursor is None else [i for i in cursor]
+    # result = []
+
     return {"result": result}
 
 
 @app.get("/materials/formula/{formula}")
 async def get_on_formula(formula: str = Path(..., title="The formula of the item to get")):
-    raise Exception("NOT IMPLEMENTED")
-    result = []
-    # user_composition = Composition(formula)
-    # for material in parsed:
-    #     current_composition = Composition(material.get("formula_pretty"))
-    #     if current_composition == user_composition:
-    #         result.append(material)
+    print(formula)
+    cursor = None
+    if "*" in formula:
+        cursor = store.query(criteria={"formula_pretty": {"$regex": formula}})
+    else:
+        print("here")
+        cursor = store.query(criteria={"formula_pretty": formula})
+
+    result = None if cursor is None else [i for i in cursor]
+    for r in result:
+        print(r['formula_pretty'])  # TODO need to remove items that matches * and have a charge >= 2 from the list
 
     return {"result": result}
 

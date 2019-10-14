@@ -1,27 +1,21 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
-
-app = FastAPI()
-
-
-class Item(BaseModel):
-    name: str
-    price: float
-    is_offer: bool = None
+from models import *
+from monty.io import zopen
+import json
+import requests as re
+from jsondiff import diff
+with zopen("data/more_mats.json") as f:
+    parsed = json.load(f)
 
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+def test_get_formula():
+    try:
+        response = re.get('http://127.0.0.1:8000/materials/formula/Ta*')
+        material = Material(**parsed[46])
+        json_a = material.json()
+        json_b = response.json()[0]
+        print(diff(json_a, json_b)) # ?????
+    except re.exceptions.ConnectionError as e:
+        assert False, "Did you start the server?"
 
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: str = None):
-    return {"item_id": item_id, "q": q}
-
-
-@app.put("/items/{item_id}")
-def update_item(item_id: int, item: Item):
-    return {"item_name": item.name, "item_id": item_id}
-
+test_get_formula()
 

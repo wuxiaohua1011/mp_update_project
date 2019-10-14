@@ -4,7 +4,7 @@ from starlette.responses import RedirectResponse, Response
 from pymatgen.core.composition import Composition
 from maggma.stores import JSONStore
 from fastapi import FastAPI
-
+from pymatgen.core.periodic_table import DummySpecie
 
 app = FastAPI()
 store = JSONStore("./data/more_mats.json")
@@ -14,7 +14,7 @@ store.connect()
 @app.get("/")
 async def root():
     collect = store.query()
-    return {"message": str(collect[0])}
+    return {"result": "root"}
 
 
 @app.get("/materials/task_id/{task_id}")
@@ -23,54 +23,59 @@ async def get_on_task_id(task_id: str = Path(..., title="The task_id of the item
     return {"result": cursor[0]}
 
 
-@app.get("/materials/chemsys/{chemsys}")
+@app.get(
+    "/materials/chemsys/{chemsys}",
+    response_description="Get all the materials that matches the chemsys field",
+    response_model=List[Material]
+)
 async def get_on_chemsys(chemsys: str = Path(..., title="The task_id of the item to get")):
     cursor = None
-    regex_index = -1
-    if "*" in chemsys:
-        chemsys_s = chemsys.split("-")
-        for s_index in range(0, len(chemsys_s)):
-            if "*" in chemsys_s[s_index]:
-                regex_index = s_index
-        cursor = store.query(criteria={"chemsys": {"$regex": chemsys}})
-    else:
-        cursor = store.query(criteria={"chemsys": chemsys})
-
-    # test cases:
-        # http://127.0.0.1:8000/materials/chemsys/B-.*
-        # change line 504 in more_mats to B-La-H, --> should see {"result":["B-La-H","B-Dy"]}
-        # change line 504 in more_mats to B-La --> should see {"result":["B-La","B-Dy"]}
-        # change line 504 in more_mats to B-La2 --> should see {"result":["B-Dy"]}
-    # per specification, append the cursor element only if the regex part satisfy number of compound == 1.0
-    result = []
-    if cursor.count() > 0:
-        for c in cursor:
-            current_chemsys = c['chemsys']
-            current_chemsys_s = current_chemsys.split("-")
-            match_compound = current_chemsys_s[regex_index]
-            compound = Composition(match_compound)
-            if compound.get_integer_formula_and_factor()[1] == 1.0:
-                result.append(current_chemsys)
-        # result = [c for c in cursor]
-        return {"result": result}
-    else:
-        return {"result": []}
+    elements = chemsys.split("-")
+    unique_elements = set(elements) - {"*"}
+    crit = dict()
+    crit["elements"] = {"$all": list(unique_elements)}
+    crit["nelements"] = len(elements)
+    cursor = store.query(criteria=crit)
+    raw_result = [c for c in cursor]
+    for r in raw_result:
+        material = Material(**r)
+    return raw_result
 
 
-@app.get("/materials/formula/{formula}")
+@app.get(
+    "/materials/formula/{formula}",
+    response_model=List[Material],
+    response_description="Get all the materials that matches the formula field"
+)
 async def get_on_formula(formula: str = Path(..., title="The formula of the item to get")):
-    print(formula)
     cursor = None
     if "*" in formula:
-        cursor = store.query(criteria={"formula_pretty": {"$regex": formula}})
+        nstars = formula.count("*")
+        dummies = 'ADEGJLMQRXZ'
+        formula_dummies = formula.replace("*", "{}").format(*dummies[:nstars])
+        try:
+            comp = Composition(formula_dummies).reduced_composition
+            crit = dict()
+            crit["formula_anonymous"] = comp.anonymized_formula
+            real_elts = [str(e) for e in comp.elements
+                         if not isinstance(e, DummySpecie)]
+            # Paranoia below about floating-point "equality"
+            crit.update(
+                {'composition_reduced.{}'.format(el): {
+                    "$gt": .99 * n, "$lt": 1.01 * n}
+                    for el, n in comp.to_reduced_dict.items()
+                    if el in real_elts})
+            pretty_formula = comp.reduced_formula
+            cursor = store.query(criteria=crit)
+            result = [c for c in cursor]
+            return result
+        except:
+            print("ERR")
+            return Material()
     else:
         print("here")
         cursor = store.query(criteria={"formula_pretty": formula})
-
-    result = None if cursor is None else [i for i in cursor]
-    for r in result:
-        print(r['formula_pretty'])  # TODO need to remove items that matches * and have a charge >= 2 from the list
-    return {"result": result}
+        return [] if cursor is None else [i for i in cursor]
 
 
 @app.get("/materials/{query}")
@@ -86,9 +91,9 @@ async def get_on_materials(query: str = Path(...)):
         return RedirectResponse('/')
 
 
-@app.put("/items/{item_id}")
-def update_item(id: int, material: Material):
-    return {"chemsys": material.chemsys, "task_id": material.task_id}
+# @app.put("/items/{item_id}")
+# def update_item(id: int, material: Material):
+#     return {"chemsys": material.chemsys, "task_id": material.task_id}
 
 
 def is_task_id(query):
@@ -97,6 +102,7 @@ def is_task_id(query):
         if len(splits) == 2 and splits[1].isdigit():
             return True
     return False
+
 
 def is_formula(query):
     try:

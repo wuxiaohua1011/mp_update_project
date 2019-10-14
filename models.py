@@ -1,46 +1,52 @@
 from typing import Dict, List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel,Schema
+from enum import Enum
 from datetime import datetime
 from typing_extensions import Literal
 from monty.json import MSONable
 
+class Time(BaseModel):
+    string: str
+
 
 class Lattice(BaseModel):
-    a: float
-    alpha: int
-    b: float
-    beta: int
-    c: float
-    gamma: int
-    volume: float
-    matrix: List[List[int]] = None
-    # class Config:
-    #     orm_mode = True
+    a: float = Schema(..., title="*a* lattice parameter")
+    alpha: int = Schema(..., title="Angle between a and b lattice vectors")
+    b: float = Schema(..., title="b lattice parameter")
+    beta: int = Schema(..., title="angle between a and c lattice vectors")
+    c: float = Schema(..., title="c lattice parameter")
+    gamma: int = Schema(..., title="angle between b and c lattice vectors")
+    volume: float = Schema(..., title="lattice volume")
+    matrix: List[List[int]] = Schema(..., title="matrix representation of this lattice")
 
 
 class Specie(BaseModel):
-    element: str
-    occu: float
-    # class Config:
-    #     orm_mode = True
+    element: str = Schema(..., title="element")
+    occu: float = Schema(..., title="site occupancy")
 
 
 class Site(BaseModel):
-    abc: List[float]
-    label: str
-    species: List[Specie]
-    xyz: List[float]
-    properties: Dict[str, int]
-    # class Config:
-    #     orm_mode = True
+    abc: List[float] = Schema(..., title="fractional coordinates")
+    label: str = None
+    species: List[Specie] = Schema(..., title="species occupying this site")
+    xyz: List[float] = Schema(..., title="cartesian coordinates")
+    properties: Dict[str, int] = Schema(..., title="arbitrary property list")
 
 
 class Structure(BaseModel):
-    charge: Optional[float] = None
+    charge: Optional[float] = Schema(None, title="site wide charge")
     lattice: Lattice
     sites: List[Site]
-    # class Config:
-    #     orm_mode = True
+
+
+class CrystalSystem(str, Enum):
+    tetragonal = "tetragonal"
+    triclinic = "triclinic"
+    orthorhombic = "orthorhombic"
+    monoclinic = "monoclinic"
+    hexagonal = "hexagonal"
+    cubic = "cubic"
+    trigonal = "trigonal"
 
 
 class Symmetry(BaseModel):
@@ -48,43 +54,35 @@ class Symmetry(BaseModel):
     symbol: str
     number: int
     point_group: str
-    crystal_system: Literal['tetragonal',
-                            'triclinic',
-                            'orthorhombic',
-                            'monoclinic',
-                            'hexagonal',
-                            'cubic',
-                            'trigonal']
+    crystal_system: CrystalSystem
     hall: str
-
-class Time(BaseModel):
-    string: str
-
-class BuiltTime(BaseModel):
-    string: str
-
-class LastUpdated(BaseModel):
-    string: datetime
-
-
-class CreatedAt(BaseModel):
-    string: datetime
 
 
 class Material(BaseModel):
-    chemsys: str
-    composition: Dict[str, int] = None
-    composition_reduced: Dict[str, int] = None
-    created_at: Time
-    density: float
-    elements: List[str]
-    formula_anonymous: str
-    formula_pretty: str
-    last_updated: Time
-    nelements: int
-    nsites: int
-    structure: Structure
-    symmetry: Symmetry
-    task_id: str
-    volume: float
-    _built_time: datetime
+    chemsys: str = Schema(
+        ...,
+        title="chemical system as a string of elements in alphabetical order delineated by dashes",
+    )
+    composition: Dict[str, int] = Schema(
+        None, title="composition as a dictionary of elements and their amount"
+    )
+    composition_reduced: Dict[str, int] = Schema(
+        None, title="reduced composition as a dictionary of elements and their amount"
+    )
+    created_at: str = Schema(
+        None,
+        title="creation time for this material defined by when the first structure optimization calculation was run",
+    )
+    density: float = Schema(..., title="mass density")
+    elements: List[str] = Schema(..., title="list of elements")
+    formula_anonymous: str = Schema(..., title="formula using anonymized elements")
+    formula_pretty: str = Schema(..., title="clean representation of the formula")
+    last_updated: datetime = Schema(..., title="timestamp for the most recent calculation")
+    nelements: int = Schema(..., title="number of elements")
+    nsites: int = Schema(..., title="number of sites")
+    structure: Structure = Schema(..., title="the structure object")
+    symmetry: Symmetry = Schema(..., title="symmetry data for this")
+    task_id: str = Schema(
+        ..., title="task id for this material. Also called the material id"
+    )
+    volume: float = Schema(..., title="")

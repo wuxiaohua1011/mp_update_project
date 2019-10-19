@@ -12,6 +12,10 @@ Project's Goal is to explore how to make the Material Project's backend system t
 
 ## C. Progress
 
+### Oct 18, 2019
+- Deploy app using APIRouter
+    - Have to invoke app at the lbnl directory using `uvicorn materialsProject2.main:app --reload`
+    - this issue has something to do with relative import path in the `materialsProject2/main.py` file, line 2
 ### Sep 27, 2019
 - Use choices for crystal system
     - Done

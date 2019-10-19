@@ -1,6 +1,6 @@
-from models import *
+from materialsProject2.routers.example_material.example_models import *
 from fastapi import Path
-from starlette.responses import RedirectResponse, Response
+from starlette.responses import RedirectResponse
 from pymatgen.core.composition import Composition
 from maggma.stores import JSONStore
 from fastapi import FastAPI
@@ -69,11 +69,9 @@ async def get_on_formula(formula: str = Path(..., title="The formula of the item
             cursor = store.query(criteria=crit)
             result = [c for c in cursor]
             return result
-        except:
-            print("ERR")
-            return Material()
+        except Exception as e:
+            raise e
     else:
-        print("here")
         cursor = store.query(criteria={"formula_pretty": formula})
         return [] if cursor is None else [i for i in cursor]
 

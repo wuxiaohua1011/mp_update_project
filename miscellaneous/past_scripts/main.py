@@ -1,11 +1,7 @@
 from monty.io import zopen
 import json
-from models import *
-from fastapi.encoders import jsonable_encoder
-from monty.serialization import loadfn
-from monty.json import jsanitize
 from fastapi import Path
-from starlette.responses import RedirectResponse, Response
+from starlette.responses import RedirectResponse
 from pymatgen.core.composition import Composition
 
 

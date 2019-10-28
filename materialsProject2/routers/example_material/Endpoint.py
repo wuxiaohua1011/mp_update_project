@@ -41,24 +41,31 @@ class Endpoint(MSONable):
         self.db_source = db_source
         self.router = APIRouter()
         self.Model = model
+
         self.router.get("/")(self.root)
         self.router.get("/{query}")(self.get_on_materials)
         self.router.get("/distinct/")(self.get_distinct_choices)
 
         # dynamic dispatch?
-        if self.Model == Material:
-            self.router.get("/task_id/{task_id}",
-                            response_description="Get the material that matches the task id, should be only one material",
-                            response_model=self.Model) \
-                (self.get_on_task_id)
-            self.router.get("/chemsys/{chemsys}",
-                            response_description="Get all the materials that matches the chemsys field",
-                            response_model=List[self.Model]) \
-                (self.get_on_chemsys)
-            self.router.get("/formula/{formula}",
-                            response_model=List[self.Model],
-                            response_description="Get all the materials that matches the formula field") \
-                (self.get_on_formula)
+        if hasattr(self.Model, "__annotations__"):
+            attr = self.Model.__dict__.get("__annotations__")
+            if attr.get("task_id"):
+                self.router.get("/task_id/{task_id}",
+                                response_description="Get the material that matches the task id, should be only one "
+                                                     "material",
+                                response_model=self.Model) \
+                    (self.get_on_task_id)
+
+            if attr.get("chemsys"):
+                self.router.get("/chemsys/{chemsys}",
+                                response_description="Get all the materials that matches the chemsys field",
+                                response_model=List[self.Model]) \
+                    (self.get_on_chemsys)
+            if attr.get("formula"):
+                self.router.get("/formula/{formula}",
+                                response_model=List[self.Model],
+                                response_description="Get all the materials that matches the formula field") \
+                    (self.get_on_formula)
 
     async def root(self):
         data = self.db_source.query_one()
@@ -91,7 +98,7 @@ class Endpoint(MSONable):
         raw_result = [c for c in cursor]
         for r in raw_result:
             material = Material(**r)
-        return raw_result[skip:skip+limit]
+        return raw_result[skip:skip + limit]
 
     async def get_on_formula(self, formula: str = Path(..., title="The formula of the item to get"),
                              skip: int = 0,
@@ -117,13 +124,13 @@ class Endpoint(MSONable):
                 pretty_formula = comp.reduced_formula
                 cursor = self.db_source.query(criteria=crit)
                 result = [c for c in cursor]
-                return result[skip:skip+limit]
+                return result[skip:skip + limit]
             except Exception as e:
                 raise e
         else:
             cursor = self.db_source.query(criteria={"formula_pretty": formula})
             result = [] if cursor is None else [i for i in cursor]
-            return result[skip:skip+limit]
+            return result[skip:skip + limit]
 
     async def get_on_materials(self, query: str = Path(...)):
         if is_task_id(query):
@@ -133,15 +140,15 @@ class Endpoint(MSONable):
         elif is_chemsys(query):
             return RedirectResponse("/materials/chemsys/{}".format(query))
         else:
-            print("WARNING: Query <{}> does not match any of the endpoint features, returning to home".format(query))
-            return RedirectResponse('/')
+            return HTTPException(status_code=404,
+                                 detail="WARNING: Query <{}> does not match any of the endpoint features".format(query))
 
     async def get_distinct_choices(self,
-                                    skip: int = 0,
-                                    limit: int = 10):
+                                   skip: int = 0,
+                                   limit: int = 10):
         data = self.db_source.query_one()
         keys = data.keys()
         result = dict()
         for k in keys:
-            result[k] = self.db_source.distinct(k)[skip:skip+limit]
+            result[k] = self.db_source.distinct(k)[skip:skip + limit]
         return result

@@ -73,6 +73,8 @@ class Material(BaseModel):
         None,
         title="creation time for this material defined by when the first structure optimization calculation was run",
     )
+    errors: List[str] = Schema(None, title="List of errors")
+    warnings: List[str] = Schema(None, title="List of warnings")
     density: float = Schema(..., title="mass density")
     elements: List[str] = Schema(..., title="list of elements")
     formula_anonymous: str = Schema(..., title="formula using anonymized elements")
@@ -86,4 +88,5 @@ class Material(BaseModel):
         ..., title="task id for this material. Also called the material id"
     )
     volume: float = Schema(..., title="")
+
 

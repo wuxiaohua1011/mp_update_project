@@ -43,6 +43,7 @@ class Endpoint(MSONable):
         self.Model = model
         self.router.get("/")(self.root)
         self.router.get("/{query}")(self.get_on_materials)
+        self.router.get("/distinct/")(self.get_distinct_choices)
 
         # dynamic dispatch?
         if self.Model == Material:
@@ -60,7 +61,12 @@ class Endpoint(MSONable):
                 (self.get_on_formula)
 
     async def root(self):
-        return {"result": "At Example Material Level"}
+        data = self.db_source.query_one()
+        keys = data.keys()
+        result = dict()
+        for k in keys:
+            result[k] = self.db_source.distinct(k)
+        return {"result": "At example root level"}
 
     async def get_on_task_id(self, task_id: str = Path(..., title="The task_id of the item to get")):
         cursor = self.db_source.query(criteria={"task_id": task_id})
@@ -71,7 +77,10 @@ class Endpoint(MSONable):
         else:
             raise HTTPException(status_code=404, detail="Item not found")
 
-    async def get_on_chemsys(self, chemsys: str = Path(..., title="The task_id of the item to get")):
+    async def get_on_chemsys(self, chemsys: str = Path(..., title="The task_id of the item to get"),
+                             skip: int = 0,
+                             limit: int = 10
+                             ):
         cursor = None
         elements = chemsys.split("-")
         unique_elements = set(elements) - {"*"}
@@ -82,9 +91,12 @@ class Endpoint(MSONable):
         raw_result = [c for c in cursor]
         for r in raw_result:
             material = Material(**r)
-        return raw_result
+        return raw_result[skip:skip+limit]
 
-    async def get_on_formula(self, formula: str = Path(..., title="The formula of the item to get")):
+    async def get_on_formula(self, formula: str = Path(..., title="The formula of the item to get"),
+                             skip: int = 0,
+                             limit: int = 10
+                             ):
         cursor = None
         if "*" in formula:
             nstars = formula.count("*")
@@ -105,12 +117,13 @@ class Endpoint(MSONable):
                 pretty_formula = comp.reduced_formula
                 cursor = self.db_source.query(criteria=crit)
                 result = [c for c in cursor]
-                return result
+                return result[skip:skip+limit]
             except Exception as e:
                 raise e
         else:
             cursor = self.db_source.query(criteria={"formula_pretty": formula})
-            return [] if cursor is None else [i for i in cursor]
+            result = [] if cursor is None else [i for i in cursor]
+            return result[skip:skip+limit]
 
     async def get_on_materials(self, query: str = Path(...)):
         if is_task_id(query):
@@ -122,3 +135,13 @@ class Endpoint(MSONable):
         else:
             print("WARNING: Query <{}> does not match any of the endpoint features, returning to home".format(query))
             return RedirectResponse('/')
+
+    async def get_distinct_choices(self,
+                                    skip: int = 0,
+                                    limit: int = 10):
+        data = self.db_source.query_one()
+        keys = data.keys()
+        result = dict()
+        for k in keys:
+            result[k] = self.db_source.distinct(k)[skip:skip+limit]
+        return result

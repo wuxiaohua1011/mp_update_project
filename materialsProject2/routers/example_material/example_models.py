@@ -86,3 +86,5 @@ class Material(BaseModel):
         ..., title="task id for this material. Also called the material id"
     )
     volume: float = Schema(..., title="")
+    errors: List[str] = Optional # TODO figure it out
+    warnings: List[str] = Optional

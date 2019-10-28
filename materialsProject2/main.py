@@ -5,7 +5,7 @@ from routers.example_material.example_models import Material
 
 store = JSONStore("../data/more_mats.json")
 store.connect()
-endpoint = Endpoint(store, Material)
+endpoint = Endpoint(store)
 
 app = FastAPI()
 
@@ -14,5 +14,3 @@ app.include_router(
     prefix="/materials",
     responses={404: {"description": "Not found"}},
 )
-
-

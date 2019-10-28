@@ -5,7 +5,7 @@ from pymatgen.core.composition import Composition, CompositionError
 from pymatgen.core.periodic_table import DummySpecie
 from typing import List
 from starlette.responses import RedirectResponse
-
+from monty.json import MSONable
 
 def is_chemsys(query:str):
     if "-" in query:
@@ -35,12 +35,11 @@ def is_task_id(query):
     return False
 
 
-class Endpoint:
-    ### TODO extending MSonable? What is that?
-    def __init__(self, db_source):
+class Endpoint(MSONable):
+    def __init__(self, db_source, model):
         self.db_source = db_source
         self.router = APIRouter()
-
+        self.Model = model
         self.router.get("/")(self.root)
         self.router.get("/{query}")(self.get_on_materials)
         self.router.get("/task_id/{task_id}",
@@ -48,10 +47,10 @@ class Endpoint:
             (self.get_on_task_id)
         self.router.get("/chemsys/{chemsys}",
                         response_description="Get all the materials that matches the chemsys field",
-                        response_model=List[Material]) \
+                        response_model=List[self.Model]) \
             (self.get_on_chemsys)
         self.router.get("/formula/{formula}",
-                        response_model=List[Material],
+                        response_model=List[self.Model],
                         response_description="Get all the materials that matches the formula field") \
             (self.get_on_formula)
 
@@ -62,7 +61,7 @@ class Endpoint:
         cursor = self.db_source.query(criteria={"task_id": task_id})
         material = cursor[0] if cursor.count() > 0 else None
         if material:
-            material = Material(**material)
+            material = self.Model(**material)
         else:
             material = dict()
         return material

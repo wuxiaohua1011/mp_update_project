@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi import Path
 from .example_models import Material
 from pymatgen.core.composition import Composition, CompositionError
@@ -7,7 +7,8 @@ from typing import List
 from starlette.responses import RedirectResponse
 from monty.json import MSONable
 
-def is_chemsys(query:str):
+
+def is_chemsys(query: str):
     if "-" in query:
         query = query.split("-")
         for q in query:
@@ -42,17 +43,21 @@ class Endpoint(MSONable):
         self.Model = model
         self.router.get("/")(self.root)
         self.router.get("/{query}")(self.get_on_materials)
-        self.router.get("/task_id/{task_id}",
-                        response_description="Get the material that matches the task id, should be only one material") \
-            (self.get_on_task_id)
-        self.router.get("/chemsys/{chemsys}",
-                        response_description="Get all the materials that matches the chemsys field",
-                        response_model=List[self.Model]) \
-            (self.get_on_chemsys)
-        self.router.get("/formula/{formula}",
-                        response_model=List[self.Model],
-                        response_description="Get all the materials that matches the formula field") \
-            (self.get_on_formula)
+
+        # dynamic dispatch?
+        if self.Model == Material:
+            self.router.get("/task_id/{task_id}",
+                            response_description="Get the material that matches the task id, should be only one material",
+                            response_model=self.Model) \
+                (self.get_on_task_id)
+            self.router.get("/chemsys/{chemsys}",
+                            response_description="Get all the materials that matches the chemsys field",
+                            response_model=List[self.Model]) \
+                (self.get_on_chemsys)
+            self.router.get("/formula/{formula}",
+                            response_model=List[self.Model],
+                            response_description="Get all the materials that matches the formula field") \
+                (self.get_on_formula)
 
     async def root(self):
         return {"result": "At Example Material Level"}
@@ -62,9 +67,9 @@ class Endpoint(MSONable):
         material = cursor[0] if cursor.count() > 0 else None
         if material:
             material = self.Model(**material)
+            return material
         else:
-            material = dict()
-        return material
+            raise HTTPException(status_code=404, detail="Item not found")
 
     async def get_on_chemsys(self, chemsys: str = Path(..., title="The task_id of the item to get")):
         cursor = None

@@ -12,6 +12,23 @@ Project's Goal is to explore how to make the Material Project's backend system t
 
 ## C. Progress
 
+### Nov 11, 2019
+1. Skip and limit in constructor and apply them throughout different functions that requires it
+    - Done
+2. Endpoint.run() to simplify running
+    - Done
+3. Rename the class name to something else, read up on REST framework to see what's the technical name
+4. move to Maggma, below are the attributes that all abstract classes should already implement
+            # Task_id
+            # last_updated
+            # errors
+            # warnings
+            # boolean to enable/disable search on warnings
+5. implement test using FastAPI testing framework
+    - welp, how do i compare json??
+6. research and design how to develop a wrapping class for each "endpoint" such that we can ex:query different databases
+7. build a simple form (POST) operation
+
 ### Oct, 25, 2019 
 - pass in data_type(ex Material) into the Endpoint __init__
     - make sure all of the get methods follow the data_type
@@ -25,8 +42,7 @@ Project's Goal is to explore how to make the Material Project's backend system t
         - hint: pymongo has a function to do it, its in maggma
         - if i want to search it, how do i know what different options do i have?
         - design it such that its not 1000000 different routes
-        
-- 
+       
 
 ### Oct 18, 2019
 - Deploy app using APIRouter
@@ -36,6 +52,7 @@ Project's Goal is to explore how to make the Material Project's backend system t
     - https://www.uvicorn.org/
     - okay, got it, super simple. see test_driver.py
 - Need help with python file structure.... idk how to resolve this issue....
+    - nvm, got it
 
     
 

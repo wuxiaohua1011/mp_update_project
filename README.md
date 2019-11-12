@@ -29,6 +29,20 @@ Project's Goal is to explore how to make the Material Project's backend system t
 6. research and design how to develop a wrapping class for each "endpoint" such that we can ex:query different databases
 7. build a simple form (POST) operation
 
+### Oct, 25, 2019 
+- pass in data_type(ex Material) into the Endpoint __init__
+    - make sure all of the get methods follow the data_type
+    - implement dynamic dispatch --> if the data attribute is in the data_type, then create the route
+- How to add pagination into the queries that needs it (Make sure all routes needs it)
+- How activate a 404 response on task_id
+- Add a few more routes
+    - Searching by "errors" field
+    - searching by "warnings" field
+    - create a route that can give me all distinct choices
+        - hint: pymongo has a function to do it, its in maggma
+        - if i want to search it, how do i know what different options do i have?
+        - design it such that its not 1000000 different routes
+       
 
 ### Oct 18, 2019
 - Deploy app using APIRouter

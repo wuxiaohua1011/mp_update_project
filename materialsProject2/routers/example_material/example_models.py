@@ -1,9 +1,10 @@
 from typing import Dict, List, Optional
-from pydantic import BaseModel,Schema
+from pydantic import BaseModel, Schema
 from enum import Enum
 from datetime import datetime
 from typing_extensions import Literal
 from monty.json import MSONable
+
 
 class Time(BaseModel):
     string: str
@@ -88,5 +89,5 @@ class Material(BaseModel):
         ..., title="task id for this material. Also called the material id"
     )
     volume: float = Schema(..., title="")
-
-
+    errors: List[str] = Optional  # TODO figure it out
+    warnings: List[str] = Optional

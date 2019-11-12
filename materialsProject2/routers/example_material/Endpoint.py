@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException
 from fastapi import Path
 from .example_models import Material
 from pymatgen.core.composition import Composition, CompositionError
@@ -6,6 +6,8 @@ from pymatgen.core.periodic_table import DummySpecie
 from typing import List
 from starlette.responses import RedirectResponse
 from monty.json import MSONable
+
+import uvicorn
 
 
 def is_chemsys(query: str):
@@ -37,14 +39,30 @@ def is_task_id(query):
 
 
 class Endpoint(MSONable):
-    def __init__(self, db_source, model):
+    def __init__(self, db_source, model, skip=0, limit=10):
         self.db_source = db_source
         self.router = APIRouter()
         self.Model = model
 
+        self.skip = skip
+        self.limit = limit
+
         self.router.get("/")(self.root)
         self.router.get("/{query}")(self.get_on_materials)
         self.router.get("/distinct/")(self.get_distinct_choices)
+
+        # TODO: Skip and limit here
+        # TODO: Endpoint.run() to simplify running
+        # TODO: Rename the class name to something else, read up on REST framework to see what's the technical name
+        # TODO: move to Maggma, below are the attributes that all abstract classes should already implement
+            # Task_id
+            # last_updated
+            # errors
+            # warnings
+            # boolean to enable/disable search on warnings
+        # TODO: implement test using FastAPI testing framework
+        # TODO: research and design how to develop a wrapping class for each "endpoint" such that we can ex:query different databases
+        # TODO: build a simple form(POST) operation
 
         # dynamic dispatch?
         if hasattr(self.Model, "__annotations__"):
@@ -85,9 +103,9 @@ class Endpoint(MSONable):
             raise HTTPException(status_code=404, detail="Item not found")
 
     async def get_on_chemsys(self, chemsys: str = Path(..., title="The task_id of the item to get"),
-                             skip: int = 0,
-                             limit: int = 10
-                             ):
+                             skip: int = -1,
+                             limit: int = -1):
+        self.setSkipAndLimit(skip, limit)
         cursor = None
         elements = chemsys.split("-")
         unique_elements = set(elements) - {"*"}
@@ -101,9 +119,9 @@ class Endpoint(MSONable):
         return raw_result[skip:skip + limit]
 
     async def get_on_formula(self, formula: str = Path(..., title="The formula of the item to get"),
-                             skip: int = 0,
-                             limit: int = 10
-                             ):
+                             skip: int = -1,
+                             limit: int = -1):
+        self.setSkipAndLimit(skip, limit)
         cursor = None
         if "*" in formula:
             nstars = formula.count("*")
@@ -144,11 +162,31 @@ class Endpoint(MSONable):
                                  detail="WARNING: Query <{}> does not match any of the endpoint features".format(query))
 
     async def get_distinct_choices(self,
-                                   skip: int = 0,
-                                   limit: int = 10):
+                                   skip: int = -1,
+                                   limit: int = -1):
+        # in the function parameter(path parameter), add fields that the user wants to query
+        self.setSkipAndLimit(skip, limit)
         data = self.db_source.query_one()
         keys = data.keys()
         result = dict()
         for k in keys:
             result[k] = self.db_source.distinct(k)[skip:skip + limit]
         return result
+
+    def setSkipAndLimit(self, skip, limit):
+        return_skip = self.skip if skip == -1 else skip
+        return_limit = self.limit if limit == -1 else limit
+        return skip, limit
+
+    def run(self):
+        app = FastAPI()
+        app.include_router(
+            self.router,
+            prefix="/materials",
+            responses={404: {"description": "Not found"}},
+        )
+
+        uvicorn.run(app, host="127.0.0.1", port=5000, log_level="info")
+
+
+

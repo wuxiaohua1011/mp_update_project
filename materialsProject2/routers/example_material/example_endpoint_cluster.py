@@ -38,33 +38,19 @@ def is_task_id(query):
     return False
 
 
-class Endpoint(MSONable):
+class EndpointCluster(MSONable):
     def __init__(self, db_source, model, skip=0, limit=10):
         self.db_source = db_source
         self.router = APIRouter()
         self.Model = model
 
-        self.skip = skip
-        self.limit = limit
-
+        self.default_skip = skip
+        self.default_limit = limit
+        self.router.post("/simple_post")(self.simple_post)
         self.router.get("/")(self.root)
         self.router.get("/{query}")(self.get_on_materials)
         self.router.get("/distinct/")(self.get_distinct_choices)
 
-        # TODO: Skip and limit here
-        # TODO: Endpoint.run() to simplify running
-        # TODO: Rename the class name to something else, read up on REST framework to see what's the technical name
-        # TODO: move to Maggma, below are the attributes that all abstract classes should already implement
-            # Task_id
-            # last_updated
-            # errors
-            # warnings
-            # boolean to enable/disable search on warnings
-        # TODO: implement test using FastAPI testing framework
-        # TODO: research and design how to develop a wrapping class for each "endpoint" such that we can ex:query different databases
-        # TODO: build a simple form(POST) operation
-
-        # dynamic dispatch?
         if hasattr(self.Model, "__annotations__"):
             attr = self.Model.__dict__.get("__annotations__")
             if attr.get("task_id"):
@@ -105,7 +91,7 @@ class Endpoint(MSONable):
     async def get_on_chemsys(self, chemsys: str = Path(..., title="The task_id of the item to get"),
                              skip: int = -1,
                              limit: int = -1):
-        self.setSkipAndLimit(skip, limit)
+        skip, limit = self.setSkipAndLimit(skip, limit)
         cursor = None
         elements = chemsys.split("-")
         unique_elements = set(elements) - {"*"}
@@ -116,12 +102,13 @@ class Endpoint(MSONable):
         raw_result = [c for c in cursor]
         for r in raw_result:
             material = Material(**r)
+        print(skip, limit)
         return raw_result[skip:skip + limit]
 
     async def get_on_formula(self, formula: str = Path(..., title="The formula of the item to get"),
                              skip: int = -1,
                              limit: int = -1):
-        self.setSkipAndLimit(skip, limit)
+        skip, limit = self.setSkipAndLimit(skip, limit)
         cursor = None
         if "*" in formula:
             nstars = formula.count("*")
@@ -165,7 +152,7 @@ class Endpoint(MSONable):
                                    skip: int = -1,
                                    limit: int = -1):
         # in the function parameter(path parameter), add fields that the user wants to query
-        self.setSkipAndLimit(skip, limit)
+        skip, limit = self.setSkipAndLimit(skip, limit)
         data = self.db_source.query_one()
         keys = data.keys()
         result = dict()
@@ -173,10 +160,15 @@ class Endpoint(MSONable):
             result[k] = self.db_source.distinct(k)[skip:skip + limit]
         return result
 
+    async def simple_post(self, data: str):
+        # https://www.errietta.me/blog/python-fastapi-intro/
+        # https://fastapi.tiangolo.com/tutorial/request-forms/
+        return {"result": "posting " + data}
+
     def setSkipAndLimit(self, skip, limit):
-        return_skip = self.skip if skip == -1 else skip
-        return_limit = self.limit if limit == -1 else limit
-        return skip, limit
+        return_skip = self.default_skip if skip == -1 else skip
+        return_limit = self.default_limit if limit == -1 else limit
+        return return_skip, return_limit
 
     def run(self):
         app = FastAPI()

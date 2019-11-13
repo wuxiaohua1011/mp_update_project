@@ -18,6 +18,9 @@ Project's Goal is to explore how to make the Material Project's backend system t
 2. Endpoint.run() to simplify running
     - Done
 3. Rename the class name to something else, read up on REST framework to see what's the technical name
+    - EndpointCluster/Endpoints
+        - https://docs.couchbase.com/server/current/rest-api/rest-endpoints-all.html
+    - REST API design tips -- https://github.com/ptboyer/restful-api-design-tips
 4. move to Maggma, below are the attributes that all abstract classes should already implement
             # Task_id
             # last_updated
@@ -26,8 +29,13 @@ Project's Goal is to explore how to make the Material Project's backend system t
             # boolean to enable/disable search on warnings
 5. implement test using FastAPI testing framework
     - welp, how do i compare json??
+    - use `pytest --disable-pytest-warnings` to suppress warnings
+    - ask shyam for a more formal way of doing pytest, having a picked database or something?
 6. research and design how to develop a wrapping class for each "endpoint" such that we can ex:query different databases
 7. build a simple form (POST) operation
+    - I think this is the right thing but im not sure how to correctly test it to make sure it is working
+        -         # https://www.errietta.me/blog/python-fastapi-intro/
+        -         # https://fastapi.tiangolo.com/tutorial/request-forms/
 
 ### Oct, 25, 2019 
 - pass in data_type(ex Material) into the Endpoint __init__

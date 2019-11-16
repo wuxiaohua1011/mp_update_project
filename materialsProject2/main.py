@@ -1,4 +1,4 @@
-from maggma.stores import JSONStore
+from maggma.stores import JSONStore # THIS IS ALREADY maggma
 from routers.example_material.example_endpoint_cluster import EndpointCluster
 from routers.example_material.example_models import Material
 

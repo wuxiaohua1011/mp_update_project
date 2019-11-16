@@ -1,11 +1,12 @@
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException, Depends
 from fastapi import Path
-from .example_models import Material
+from .example_models import Material, CommonPaginationParams
 from pymatgen.core.composition import Composition, CompositionError
 from pymatgen.core.periodic_table import DummySpecie
 from typing import List
 from starlette.responses import RedirectResponse
 from monty.json import MSONable
+from maggma.stores import JSONStore
 
 import uvicorn
 
@@ -44,9 +45,8 @@ class EndpointCluster(MSONable):
         self.router = APIRouter()
         self.Model = model
 
-        self.default_skip = skip
-        self.default_limit = limit
         self.router.post("/simple_post")(self.simple_post)
+
         self.router.get("/")(self.root)
         self.router.get("/{query}")(self.get_on_materials)
         self.router.get("/distinct/")(self.get_distinct_choices)
@@ -89,9 +89,8 @@ class EndpointCluster(MSONable):
             raise HTTPException(status_code=404, detail="Item not found")
 
     async def get_on_chemsys(self, chemsys: str = Path(..., title="The task_id of the item to get"),
-                             skip: int = -1,
-                             limit: int = -1):
-        skip, limit = self.setSkipAndLimit(skip, limit)
+                             paginationParam: CommonPaginationParams = Depends()):
+        skip, limit = paginationParam.skip, paginationParam.limit
         cursor = None
         elements = chemsys.split("-")
         unique_elements = set(elements) - {"*"}
@@ -102,13 +101,11 @@ class EndpointCluster(MSONable):
         raw_result = [c for c in cursor]
         for r in raw_result:
             material = Material(**r)
-        print(skip, limit)
         return raw_result[skip:skip + limit]
 
     async def get_on_formula(self, formula: str = Path(..., title="The formula of the item to get"),
-                             skip: int = -1,
-                             limit: int = -1):
-        skip, limit = self.setSkipAndLimit(skip, limit)
+                             paginationParam: CommonPaginationParams = Depends()):
+        skip, limit = paginationParam.skip, paginationParam.limit
         cursor = None
         if "*" in formula:
             nstars = formula.count("*")
@@ -149,10 +146,9 @@ class EndpointCluster(MSONable):
                                  detail="WARNING: Query <{}> does not match any of the endpoint features".format(query))
 
     async def get_distinct_choices(self,
-                                   skip: int = -1,
-                                   limit: int = -1):
+                                   paginationParam: CommonPaginationParams = Depends()):
         # in the function parameter(path parameter), add fields that the user wants to query
-        skip, limit = self.setSkipAndLimit(skip, limit)
+        skip, limit = paginationParam.skip, paginationParam.limit
         data = self.db_source.query_one()
         keys = data.keys()
         result = dict()
@@ -172,6 +168,11 @@ class EndpointCluster(MSONable):
 
     def run(self):
         app = FastAPI()
+
+        @app.get("/")
+        async def root():
+            return {"message": "App initiated"}
+
         app.include_router(
             self.router,
             prefix="/materials",
@@ -179,6 +180,3 @@ class EndpointCluster(MSONable):
         )
 
         uvicorn.run(app, host="127.0.0.1", port=5000, log_level="info")
-
-
-

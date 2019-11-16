@@ -42,6 +42,7 @@ class TestClass:
         response = self.client.get("/materials/chemsys/" + chemsys)
         actual_cursor = self.store.query(criteria={"chemsys": chemsys})
         response_json = response.json()
+
         assert response.status_code == 200
         assert len(response_json) == actual_cursor.count()
 

@@ -1,12 +1,11 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Depends
 from fastapi import Path
-from .example_models import Material, CommonPaginationParams
+from example_models import Material, CommonPaginationParams
 from pymatgen.core.composition import Composition, CompositionError
 from pymatgen.core.periodic_table import DummySpecie
 from typing import List
 from starlette.responses import RedirectResponse
 from monty.json import MSONable
-from maggma.stores import JSONStore
 
 import uvicorn
 

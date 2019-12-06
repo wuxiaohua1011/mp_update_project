@@ -11,6 +11,21 @@ Project's Goal is to explore how to make the Material Project's backend system t
 - [Dash](https://plot.ly/dash/)
 
 ## C. Progress
+1. create a pull request for `maggma refactor`
+    - make the `endpointcluster.py` in the main maggma folder(where builders.py is)
+    - Done, but need to ask Shyam how to organize these files, and also where exactly does the dependency comes in
+2. pagination -- dependency
+    - fastapgit i -> dependency   
+    - HATEOS
+    - Pagination Dependency added
+        - put the dependency class in `example_models.py` because all endpoints should be using common pagination
+3. Try play with GraphQL-pydantic --query parsing language
+
+### Dec 5, 2019
+1. updating maggma branch.
+    - encountered problem with writing unnittest -- it does not recognize root endpoint for some reason but does recognize materials endpoint
+    - understood and implemneted a dummy pydantic graphql, trying to think about how to plug it in for our project
+    
 
 ### Nov 11, 2019
 1. Skip and limit in constructor and apply them throughout different functions that requires it
@@ -22,11 +37,12 @@ Project's Goal is to explore how to make the Material Project's backend system t
         - https://docs.couchbase.com/server/current/rest-api/rest-endpoints-all.html
     - REST API design tips -- https://github.com/ptboyer/restful-api-design-tips
 4. move to Maggma, below are the attributes that all abstract classes should already implement
-            # Task_id
-            # last_updated
-            # errors
-            # warnings
-            # boolean to enable/disable search on warnings
+    - Task_id
+    - last_updated
+    - errors
+    - warnings
+    - boolean to enable/disable search on warnings
+    1. in main.py, i think we are already using maggma.JSONSTORE as our database connection, so I think we are good?
 5. implement test using FastAPI testing framework
     - welp, how do i compare json??
     - use `pytest --disable-pytest-warnings` to suppress warnings

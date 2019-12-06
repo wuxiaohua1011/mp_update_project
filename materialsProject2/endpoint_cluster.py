@@ -1,8 +1,8 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Depends
 from fastapi import Path
-from example_models import Material, CommonPaginationParams
+
+from examples.models import Material, CommonPaginationParams
 from pymatgen.core.composition import Composition, CompositionError
-from pymatgen.core.periodic_table import DummySpecie
 from typing import List
 from starlette.responses import RedirectResponse
 from monty.json import MSONable
@@ -26,7 +26,7 @@ def is_formula(query):
     try:
         Composition(query)
         return True
-    except CompositionError as e:
+    except Exception:
         return False
 
 
@@ -64,7 +64,7 @@ class EndpointCluster(MSONable):
                                 response_description="Get all the materials that matches the chemsys field",
                                 response_model=List[self.Model]) \
                     (self.get_on_chemsys)
-            if attr.get("formula"):
+            if attr.get("formula_pretty"):
                 self.router.get("/formula/{formula}",
                                 response_model=List[self.Model],
                                 response_description="Get all the materials that matches the formula field") \
@@ -115,14 +115,14 @@ class EndpointCluster(MSONable):
                 crit = dict()
                 crit["formula_anonymous"] = comp.anonymized_formula
                 real_elts = [str(e) for e in comp.elements
-                             if not isinstance(e, DummySpecie)]
+                             if not e.as_dict().get("element", "A") in dummies]
+
                 # Paranoia below about floating-point "equality"
-                crit.update(
-                    {'composition_reduced.{}'.format(el): {
-                        "$gt": .99 * n, "$lt": 1.01 * n}
-                        for el, n in comp.to_reduced_dict.items()
-                        if el in real_elts})
-                pretty_formula = comp.reduced_formula
+                for el, n in comp.to_reduced_dict.items():
+                    if el in real_elts:
+                        crit['composition_reduced.{}'.format(el)] = {"$gt": .99 * n, "$lt": 1.01 * n}
+
+                # pretty_formula = comp.reduced_formula
                 cursor = self.db_source.query(criteria=crit)
                 result = [c for c in cursor]
                 return result[skip:skip + limit]
@@ -136,10 +136,10 @@ class EndpointCluster(MSONable):
     async def get_on_materials(self, query: str = Path(...)):
         if is_task_id(query):
             return RedirectResponse("/materials/task_id/{}".format(query))
-        elif is_formula(query):
-            return RedirectResponse("/materials/formula/{}".format(query))
         elif is_chemsys(query):
             return RedirectResponse("/materials/chemsys/{}".format(query))
+        elif is_formula(query):
+            return RedirectResponse("/materials/formula/{}".format(query))
         else:
             return HTTPException(status_code=404,
                                  detail="WARNING: Query <{}> does not match any of the endpoint features".format(query))
@@ -160,11 +160,6 @@ class EndpointCluster(MSONable):
         # https://fastapi.tiangolo.com/tutorial/request-forms/
         return {"result": "posting " + data}
 
-    def setSkipAndLimit(self, skip, limit):
-        return_skip = self.default_skip if skip == -1 else skip
-        return_limit = self.default_limit if limit == -1 else limit
-        return return_skip, return_limit
-
     def run(self):
         app = FastAPI()
 
@@ -178,4 +173,4 @@ class EndpointCluster(MSONable):
             responses={404: {"description": "Not found"}},
         )
 
-        uvicorn.run(app, host="127.0.0.1", port=5000, log_level="info")
+        uvicorn.run(app, host="127.0.0.1", port=8080, log_level="info", reload=True)

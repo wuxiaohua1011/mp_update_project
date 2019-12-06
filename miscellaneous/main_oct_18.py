@@ -1,4 +1,4 @@
-from materialsProject2.routers.example_material.example_models import *
+from examples.models import *
 from fastapi import Path
 from starlette.responses import RedirectResponse
 from pymatgen.core.composition import Composition

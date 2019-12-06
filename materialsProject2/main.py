@@ -1,6 +1,6 @@
 from maggma.stores import JSONStore # THIS IS ALREADY maggma
-from routers.example_material.example_endpoint_cluster import EndpointCluster
-from routers.example_material.example_models import Material
+from endpoint_cluster import EndpointCluster
+from examples.models import Material
 
 store = JSONStore("../data/more_mats.json")
 store.connect()

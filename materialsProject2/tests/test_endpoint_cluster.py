@@ -12,7 +12,7 @@ from maggma.stores import JSONStore
 from starlette.testclient import TestClient
 
 from endpoint_cluster import EndpointCluster
-from models import Material
+from examples.models import Material
 
 
 class TestEndpointCluster(unittest.TestCase):

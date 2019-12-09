@@ -1,6 +1,9 @@
 import graphene
 from fastapi import FastAPI
 from starlette.graphql import GraphQLApp
+from pydantic import BaseModel
+from graphene_pydantic import PydanticObjectType
+import typing
 
 
 class Query(graphene.ObjectType):

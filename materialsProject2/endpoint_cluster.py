@@ -1,7 +1,7 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Depends
 from fastapi import Path
 
-from examples.models import Material, CommonPaginationParams
+from models import MaterialModel, CommonPaginationParams
 from pymatgen.core.composition import Composition, CompositionError
 from typing import List
 from starlette.responses import RedirectResponse

@@ -19,7 +19,13 @@ class Person(PydanticObjectType):
 
 
 def get_people():
-    return [PersonModel(id=uuid.uuid4(), first_name="michael", last_name="wu")]
+    return [PersonModel(id=uuid.uuid4(),
+                        first_name="michael",
+                        last_name="wu"),
+            PersonModel(id=uuid.uuid4(),
+                        first_name="jerry",
+                        last_name="ding")
+            ]
 
 
 class Query(graphene.ObjectType):
@@ -41,3 +47,4 @@ query = '''
 result = schema.execute(query)
 import json
 print(json.dumps(result.data, indent=2))
+

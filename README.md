@@ -11,6 +11,20 @@ Project's Goal is to explore how to make the Material Project's backend system t
 - [Dash](https://plot.ly/dash/)
 
 ## C. Progress
+
+### Dec 10, 2019
+Commit:
+1. distint added in the root(endpoint_cluster.py)
+
+2. query on formula added on materials_endpoint
+3. more test written for formula
+
+Problems:
+1. cannot test for root endpoint stuff, see the commented out section in maggma/tests/test_endpoint_cluster.py
+2. currently creating a seperate endpoint is still pretty complicated, need to fiture out a systematic way
+3. need to write more documentation for the code
+
+### Dec 6, 2019
 1. create a pull request for `maggma refactor`
     - make the `endpointcluster.py` in the main maggma folder(where builders.py is)
     - Done, but need to ask Shyam how to organize these files, and also where exactly does the dependency comes in

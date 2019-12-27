@@ -12,6 +12,18 @@ Project's Goal is to explore how to make the Material Project's backend system t
 
 ## C. Progress
 
+
+### Dec 26, 2019
+    1. have tags in cluster manager when initialize endpoint clusters
+        - Done, tags = [] when not passed in
+    2. look at bigger application in fastapi, see if there's any other optional params that we can incluce
+    3. implement responses (cluster manager can override endpoints'), and application.py
+    4. write documentation in Google Docstrings format
+        - done, also found out about doc string from Swagger UI, might be useful?
+        - https://fastapi.tiangolo.com/tutorial/path-operation-configuration/#description-from-docstring
+    5. push everything to refactor branch of maggma
+        - Done, but task 2 and 3 will be synced manually a little later
+
 ### Dec 10, 2019
 Commit:
 1. distint added in the root(endpoint_cluster.py)

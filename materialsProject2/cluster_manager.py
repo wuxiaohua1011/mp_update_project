@@ -51,6 +51,17 @@ class ClusterManager(MSONable):
         """
         return self.endpoints.values()
 
+    def getEndpoint(self, key:str):
+        """
+
+        Args:
+            key: the given key
+
+        Returns:
+            return the endpoint if the key is in self.endpoints, otherwise, raise error
+        """
+        return self.endpoints[key]
+
     # things needed
     # tags
     # look at bigger application in fastapi
@@ -64,11 +75,21 @@ class ClusterManager(MSONable):
 if __name__ == "__main__":
     json_store = JSONStore("../data/more_mats.json")
     json_store.connect()
-
+    responses = {
+        204: {"description": "CUSTOM_DESCRIPTION: No content not found"},
+        302: {"description": "CUSTOM_DESCRIPTION: The item was moved"},
+        404: {"description": "CUSTOM_DESCRIPTION: NOT FOUND"},
+    }
     ## initialize endpoints
-    mp_endpoint1 = MaterialEndpointCluster(db_source=json_store, prefix="/materials1", tags=["material", "1"])
-    mp_endpoint2 = MaterialEndpointCluster(db_source=json_store, prefix="/materials2", tags=["material", "2"])
-    general_endpoint = EndpointCluster(db_source=json_store, model=SpecieModel)
+    mp_endpoint1 = MaterialEndpointCluster(db_source=json_store,
+                                           prefix="/materials1",
+                                           tags=["material", "1"],
+                                           responses=responses)
+    mp_endpoint2 = MaterialEndpointCluster(db_source=json_store,
+                                           prefix="/materials2",
+                                           tags=["material", "2"])
+    general_endpoint = EndpointCluster(db_source=json_store,
+                                       model=SpecieModel)
 
     clusterManager = ClusterManager()
     clusterManager.addEndpoint(mp_endpoint1)

@@ -1,0 +1,30 @@
+[
+ {
+  "fpath": "/Users/michaelwu/Desktop/projects/lbnl/mp_update_project/data/citations-20200319T224930.bibtex",
+  "md5sum": "5517e0bf657ec898682f95369e32c639"
+ },
+ {
+  "fpath": "/Users/michaelwu/Desktop/projects/lbnl/mp_update_project/data/citations-20200319T225135.bibtex",
+  "md5sum": "96c99918faba5f29c2789e719c722507"
+ },
+ {
+  "fpath": "/Users/michaelwu/Desktop/projects/lbnl/mp_update_project/data/citations-20200319T225017.bibtex",
+  "md5sum": "ad6afe3af18f700abfe9f3c48859cb52"
+ },
+ {
+  "fpath": "/Users/michaelwu/Desktop/projects/lbnl/mp_update_project/data/citations-20200319T225012.bibtex",
+  "md5sum": "b138e21960d2bf8861647e1a5f9679b0"
+ },
+ {
+  "fpath": "/Users/michaelwu/Desktop/projects/lbnl/mp_update_project/data/citations-20200319T224807.bibtex",
+  "md5sum": "d322e4f9ae0cbd32fbefb5f790b4ae8a"
+ },
+ {
+  "fpath": "/Users/michaelwu/Desktop/projects/lbnl/mp_update_project/data/citations-20200319T225141.bibtex",
+  "md5sum": "764496bd85fe70e14635b6f507364934"
+ },
+ {
+  "fpath": "/Users/michaelwu/Desktop/projects/lbnl/mp_update_project/data/citations-20200319T225130.bibtex",
+  "md5sum": "8a596e670b3ec20e76f749932a25fb04"
+ }
+]

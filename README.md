@@ -13,6 +13,33 @@ Project's Goal is to explore how to make the Material Project's backend system t
 ## C. Progress
 
 
+
+### March 25, 2020
+    1. Install local MongoDB
+        - To Run MongoDB:
+            - `brew services run mongodb-community`
+            -  Note: You can use start instead of run. start will start MongoDB automatically when you login into your Macbook. I prefer run since I don’t want MongoDB to be running all the time.
+        - To Stop:
+            - brew services stop mongodb-community
+        
+    2. Instruction: 
+```
+A drone has a concept of record
+    - a record might have multiple documents, or it could be a folder
+    - might contain groups of files
+        - ex: getPath
+    - some function that determine if any of the record is new
+    - The Drone insert the new record into the database
+
+- Build file relationship
+    - they could be in different folder, same folder, etc
+    - ** Assume we have all of them in the same folder for now
+- NOTE: Build it s.t. the drone class is very abstract, 
+    - the comparison func should be inherited, just as the QueryOperator
+    - make it modular, we are trying to build something abstract
+```
+
+
 ### Dec 26, 2019
     1. have tags in cluster manager when initialize endpoint clusters
         - Done, tags = [] when not passed in

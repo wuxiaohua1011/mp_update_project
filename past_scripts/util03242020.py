@@ -49,3 +49,21 @@ def populate_mongo_store(documents: List[BaseModel], collection_name="docuemnts"
     doc_dicts = [d.dict() for d in documents]
     store.update(doc_dicts)
     return store
+
+
+"""
+A drone has a concept of record
+    - a record might have multiple documents, or it could be a folder
+    - might contain groups of files
+        - ex: getPath
+    - some function that determine if any of the record is new
+    - The Drone insert the new record into the database
+
+- Build file relationship
+    - they could be in different folder, same folder, etc
+    - ** Assume we have all of them in the same folder for now
+- NOTE: Build it s.t. the drone class is very abstract, 
+    - the comparison func should be inherited, just as the QueryOperator
+    - make it modular, we are trying to build something abstract
+    
+"""

@@ -14,7 +14,7 @@ Run the runner once
 change a single file
 Run the runner again - it should just update that one file into the Database
 """
-from util import *
+from util03242020py import *
 
 
 def record_current_state(store: MemoryStore, fname=Path("records.txt")):
@@ -45,3 +45,4 @@ def record_current_state(store: MemoryStore, fname=Path("records.txt")):
 docs = get_list_of_files(folder_path=Path.cwd() / "data", debug=False)
 store = populate_mongo_store(documents=docs)
 record_current_state(store)
+

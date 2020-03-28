@@ -8,6 +8,7 @@ import os
 import hashlib
 from abc import ABCMeta, abstractmethod
 
+
 class Document(BaseModel):
     path: PosixPath = Field(..., title="Path of this file")
     name: str = Field(..., title="File name")
@@ -22,6 +23,9 @@ class RecordIdentifier(BaseModel):
                            title="Hash that uniquely define this record, can be inferred from each document inside")
     # stateHash: str = Field(..., title="Hash of the state of the documents in this Record")
 
+    def __hash__(self):
+        return hash(self.recordKey)
+
 class Drone(MSONable):
     def __init__(self, store: Store, key: str):
         self.store = store
@@ -35,16 +39,39 @@ class Drone(MSONable):
         else:
             return record
 
-    def buildRecords(self, documents: Union[List[BaseModel], Path], debug=False):
+    def buildRecords(self, documents: Union[List[BaseModel], Path], debug=False, method=1):
         if isinstance(documents, Path):
             documents = self.generateDocuments(documents)
+        ### Method 1
+        if method == 1:
+            for doc in documents:
+                r = self.getRecordIdentifier(document=doc)
+                status = self.updateRecordIdentifier_1(r, doc)
+                if debug:
+                    print("Modified? {}, doc = {}, record = {}".format(status, doc.name, r.recordKey))
+                    print()
 
-        for doc in documents:
-            r = self.getRecordIdentifier(document=doc)
-            status = self.updateRecordIdentifier(r, doc)
-            if debug:
-                print("Modified? {}, doc = {}, record = {}".format(status, doc.name, r.recordKey))
-                print()
+        ### Method 2
+        elif method == 2:
+            log: Dict[RecordIdentifier, List[Document]] = dict()
+            for doc in documents:
+                r = self.getRecordIdentifier(document=doc)
+                docs = log.get(r, [])
+                docs.append(doc)
+                log[r] = docs
+            self.updateRecordIdentifier_2(log)
+
+    def updateRecordIdentifier_2(self, log: Dict[RecordIdentifier, List[Document]]):
+        """
+        advantage: allow bulk update to the database
+        disadvantage: if there are too many files to update, might cause problem locally
+
+        :param log:
+        :return:
+        """
+        for recordIdentifier, docs in log.items():
+            for doc in docs:
+                self.updateRecordIdentifier_1(recordIdentifier=recordIdentifier, document=doc)
 
     def generateDocuments(self, folder_path: Path) -> List[Document]:
         files_paths = [folder_path / f for f in os.listdir(folder_path.as_posix())]
@@ -56,9 +83,13 @@ class Drone(MSONable):
         md5sum = hashlib.md5(s).hexdigest()
         return Document(path=path, name=path.name, md5sum=md5sum)
 
-    def updateRecordIdentifier(self, recordIdentifier: RecordIdentifier, document: Document) -> bool:
+    def updateRecordIdentifier_1(self, recordIdentifier: RecordIdentifier, document: Document) -> bool:
         """
         Guaranteed recordIdentifier is not null and that this record needs update
+
+        advantage: straight forward logic
+        disadvantage: lead to a lot of calls to the database
+
         :param recordIdentifier:
         :param document:
         :return:

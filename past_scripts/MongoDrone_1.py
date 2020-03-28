@@ -1,6 +1,6 @@
 from os import listdir
 
-from drone import Document, Record, Drone
+from past_scripts.drone_2 import Document, Record, Drone
 from maggma.stores import MongoStore
 from typing import List, Dict
 from pathlib import Path

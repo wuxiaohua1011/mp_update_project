@@ -53,13 +53,17 @@ class Drone(MSONable):
 
         ### Method 2
         elif method == 2:
-            log: Dict[RecordIdentifier, List[Document]] = dict()
-            for doc in documents:
-                r = self.getRecordIdentifier(document=doc)
-                docs = log.get(r, [])
-                docs.append(doc)
-                log[r] = docs
+            log = self.get_records_2(documents)
             self.updateRecordIdentifier_2(log)
+
+    def get_records_2(self, documents:List[Document]) -> Dict[RecordIdentifier, List[Document]]:
+        log: Dict[RecordIdentifier, List[Document]] = dict()
+        for doc in documents:
+            r = self.getRecordIdentifier(document=doc)
+            docs = log.get(r, [])
+            docs.append(doc)
+            log[r] = docs
+        return log
 
     def updateRecordIdentifier_2(self, log: Dict[RecordIdentifier, List[Document]]):
         """

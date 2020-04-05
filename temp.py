@@ -8,7 +8,7 @@ Drone
     - Step 1:
         - Crawl through Path of the folder where data live
             - it will return Record of  (Already in method 2)
-                (citations-1.bibtex, text-1.txt)
+                (cite.bibtex, data.txt)
                 (citations-2.bibtex, text-2.txt)
                 (citations-3.bibtex, ) ...
      - Step 2: Takes a list of Record (from the result above), and say if it should be updated or not
@@ -21,16 +21,32 @@ Drone
 """
 
 
-from pydantic import BaseModel, Field
-test_data = {"f1": "st1",
-             "f2": "st2",
-             "f3": "st3"}
+# database IO is always expensive
+
+"""
+Optimization
+assimilate
+    - 
 
 
-class TestModel(BaseModel):
-    f1: str = Field(...)
-    f2: str = Field(...)
+"""
 
-t = TestModel.parse_obj(test_data)
-# t = TestModel(**test_data)
-print(t)
+# for record_identifier in records_to_update:  # step 2
+#     # if self.shouldUpdateRecord(record_identifier=record_identifier):  # step 2 <- build a function that given a list of RecordID, give back a list indicating which recordID should be upadated
+#     data = self.computeData(recordID=record_identifier)  # step 3
+#     data.update(record_identifier.dict())  # step 4
+#     batched_data.append(data)
+
+"""
+New things:
+- make example1 and exmaple2 work in BibTexDrone
+
+- profiling to see which part is slow
+    -  https://docs.python.org/3/library/profile.html
+- implement a custom RecordIdentifier class that have custom hash, etc
+- a read function that returns the shape of the system file structure it sees. 
+- 
+
+
+
+"""

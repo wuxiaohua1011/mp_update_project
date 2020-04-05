@@ -71,6 +71,6 @@ if __name__ == "__main__":
     store.connect()
     memory_drone = MongoDrone(store=store)
 
-    memory_drone.init_build_records(Path.cwd() / "data" / "folder1")
+    memory_drone.init_build_records(Path.cwd() / "data" / "example1")
 
     store.close()

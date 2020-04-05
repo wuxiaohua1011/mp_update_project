@@ -7,6 +7,6 @@ mongo_store.connect()
 
 bibDrone = BibTexDrone(mongo_store, record_key=key)
 
-bibDrone.assimilate(Path.cwd() / "data" / "folder1", debug=True)
+bibDrone.assimilate(Path.cwd() / "data" / "example1", debug=True)
 
 mongo_store.close()

@@ -120,4 +120,4 @@ if __name__ == "__main__":
 
     mongo_drone = MongoDrone(store=store)
 
-    mongo_drone.buildRecords(Path.cwd() / "data" / "folder1", debug=False)
+    mongo_drone.buildRecords(Path.cwd() / "data" / "example1", debug=False)

@@ -3,15 +3,15 @@ from pathlib import PosixPath, Path
 from datetime import datetime
 from typing import Dict, List, Optional
 from monty.json import MSONable
-from _hashlib import HASH as Hash
 import hashlib
 from abc import abstractmethod
 import os.path
 
+
 class Document(BaseModel):
     path: PosixPath = Field(..., title="Path of this file")
     name: str = Field(..., title="File name")
-    is_folder: bool = False
+    is_dir: bool = False
 
 
 class RecordIdentifier(BaseModel):
@@ -59,7 +59,7 @@ class Drone(MSONable):
         - Crawl through Path of the folder where data live
             - it will return Record of  (Already in method 2)
                 (cite.bibtex, data.txt)
-                (citations-2.bibtex, text-2.txt)
+                (cite2.bibtex, text-2.txt)
                 (citations-3.bibtex, ) ...
      - Step 2: Takes a list of Record (from the result above), and say if it should be updated or not
         - If you've seen it before and the raw data has changed --> return True
@@ -123,6 +123,12 @@ class Drone(MSONable):
         raise NotImplementedError
 
     def shouldUpdateRecords(self, record_identifiers: List[RecordIdentifier]) -> List[bool]:
+        """
+        Batch query database by computing all the keys and send them at once
+        :param record_identifiers: all the record_identifiers that need to fetch from database
+        :return:
+            boolean mask of whether the record_identifier at that index require update
+        """
         # initialize results with len(record_identifiers) and each value True indicating all entries needs update
         result = [True] * len(record_identifiers)
 
@@ -133,7 +139,7 @@ class Drone(MSONable):
         # query database for list of ids
         cursor = self.store.query(criteria={self.record_key:
                                                 {"$in": [r.record_key for r in record_identifiers]}},
-                                  properties=["record_key", "state_hash", "last_updated"]) # TODO check with Shyam here
+                                  properties=["record_key", "state_hash", "last_updated"])  # TODO check with Shyam here
 
         while True:
             try:
@@ -186,7 +192,7 @@ class Drone(MSONable):
         record_identifiers: List[RecordIdentifier] = self.read(path=path)  # step 1
 
         for rid in record_identifiers:
-            print(rid.state_hash)
+            print("rid = {}, state_hash = {}".format(rid.record_key, rid.state_hash))
 
         update_mask: List[bool] = self.shouldUpdateRecords(record_identifiers)  # step 2
 
@@ -200,3 +206,36 @@ class Drone(MSONable):
                 for b in batched_data:
                     print("Updating Record With ID {}".format(b[self.record_key]))
             self.store.update(batched_data)  # step 5
+
+    def printDirectory(self, dir_path: Path, prefix: str = ''):
+
+        """
+            Cite: https://stackoverflow.com/questions/9727673/list-directory-tree-structure-in-python
+            A recursive generator, given a directory Path object
+            will yield a visual tree structure line by line
+            with each line prefixed by the same characters
+        """
+        # prefix components:
+        space = '    '
+        branch = '│   '
+        # pointers:
+        tee = '├── '
+        last = '└── '
+
+        def tree(dir_path: Path, prefix: str = ''):
+            """A recursive generator, given a directory Path object
+            will yield a visual tree structure line by line
+            with each line prefixed by the same characters
+            """
+            contents = list(dir_path.iterdir())
+            # contents each get pointers that are ├── with a final └── :
+            pointers = [tee] * (len(contents) - 1) + [last]
+            for pointer, path in zip(pointers, contents):
+                yield prefix + pointer + path.name
+                if path.is_dir():  # extend the prefix and recurse:
+                    extension = branch if pointer == tee else space
+                    # i.e. space because last, └── , above so no more |
+                    yield from tree(path, prefix=prefix + extension)
+
+        for line in tree(dir_path=dir_path, prefix=prefix):
+            print(line)

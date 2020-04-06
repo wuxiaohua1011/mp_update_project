@@ -9,7 +9,7 @@ Drone
         - Crawl through Path of the folder where data live
             - it will return Record of  (Already in method 2)
                 (cite.bibtex, data.txt)
-                (citations-2.bibtex, text-2.txt)
+                (cite2.bibtex, text-2.txt)
                 (citations-3.bibtex, ) ...
      - Step 2: Takes a list of Record (from the result above), and say if it should be updated or not
         - If you've seen it before and the raw data has changed --> return True

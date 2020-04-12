@@ -35,7 +35,7 @@ class RecordIdentifier(BaseModel):
 
     def computeStateHashes(self) -> str:
         """
-        Given a list of documents, contain their hashes
+        compute the hash of the state of the documents in this record
         :param doc_list: list of documents
         :return:
             hash of the list of documents passed in
@@ -87,10 +87,6 @@ class Drone(MSONable):
         raise NotImplementedError
 
     @abstractmethod
-    def generateDocuments(self, folder_path: Path) -> List[Document]:
-        raise NotImplementedError
-
-    @abstractmethod
     def read(self, path: Path) -> List[RecordIdentifier]:
         """
         Given a folder path to a data folder, read all the files, and return a dictionary
@@ -135,7 +131,7 @@ class Drone(MSONable):
         # build log for fast referecing. Mapping of record_key -> (index_in_record_identifiers)
         memory_record_identifiers_log = {record_identifiers[i].record_key: i for i in range(len(record_identifiers))}
         keys = [r.record_key for r in record_identifiers]
-        print("DEBUG: All Keys to Check {}".format(keys))
+        
         # query database for list of ids
         cursor = self.store.query(criteria={self.record_key:
                                                 {"$in": [r.record_key for r in record_identifiers]}},
@@ -152,7 +148,6 @@ class Drone(MSONable):
                     result[index] = False
             except StopIteration:
                 break
-        print()
         return result
 
     def shouldUpdateRecord(self, record_identifier: RecordIdentifier) -> bool:

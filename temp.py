@@ -50,3 +50,43 @@ New things:
 
 
 """
+
+
+
+
+
+"""
+in the future, use python's logging function for debug printing
+
+
+Drone.py inherit from MSONABLE, nand ABC Meta
+
+Switch docstring to Arguments:
+Return 
+    should UpdateRecord should return a list of recordIdentifer being updated
+
+    Two types of RecordIdentifier
+        I care about
+
+
+    move computeRecord key into the recordIdentifier
+        - default key name is going to be hash of all the document
+
+    document should be not be a directory, document should always be a file
+
+    for loop on cursor in shouldUpdateRecords(see slack)
+
+
+    remove printTree function
+
+
+BibTexDrone
+
+
+source=[]
+
+
+Builder
+    keep read and computeData
+    any database related function can only happen in getUpdate and get_items
+    anything that can be paralleled, should be in process

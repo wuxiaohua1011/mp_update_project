@@ -8,9 +8,8 @@ import re
 
 class SimpleBibDrone(Drone):
     def __init__(self,
-                 store,
-                 record_key):
-        super().__init__(store=store, record_key=record_key)
+                 store, logger):
+        super().__init__(store=store, logger=logger)
 
     def computeRecordIdentifier(self, record_key: str, doc_list: List[Document]) -> RecordIdentifier:
         """
@@ -111,8 +110,8 @@ class SimpleBibDrone(Drone):
         return log
 
 class ComplexBibDrone(SimpleBibDrone):
-    def __init__(self, store, record_key):
-        super().__init__(store=store, record_key=record_key)
+    def __init__(self, store, logger):
+        super().__init__(store=store, logger=logger)
 
     def computeRecordIdentifierKey(self, doc: Document) -> str:
         """

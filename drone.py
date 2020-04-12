@@ -6,7 +6,7 @@ from monty.json import MSONable
 import hashlib
 from abc import abstractmethod
 import os.path
-
+import logging
 
 class Document(BaseModel):
     path: PosixPath = Field(..., title="Path of this file")
@@ -72,9 +72,10 @@ class Drone(MSONable):
 
     def __init__(self,
                  store,
-                 record_key):
+                 logger : logging.Logger = logging.getLogger(__name__)):
         self.store = store
-        self.record_key = record_key
+        self.logger = logger
+
 
     @abstractmethod
     def computeRecordIdentifierKey(self, doc: Document) -> str:
@@ -118,7 +119,7 @@ class Drone(MSONable):
         """
         raise NotImplementedError
 
-    def shouldUpdateRecords(self, record_identifiers: List[RecordIdentifier]) -> List[bool]:
+    def shouldUpdateRecords(self, record_identifiers: List[RecordIdentifier]) -> List[RecordIdentifier]:
         """
         Batch query database by computing all the keys and send them at once
         :param record_identifiers: all the record_identifiers that need to fetch from database
@@ -126,52 +127,20 @@ class Drone(MSONable):
             boolean mask of whether the record_identifier at that index require update
         """
         # initialize results with len(record_identifiers) and each value True indicating all entries needs update
-        result = [True] * len(record_identifiers)
 
         # build log for fast referecing. Mapping of record_key -> (index_in_record_identifiers)
-        memory_record_identifiers_log = {record_identifiers[i].record_key: i for i in range(len(record_identifiers))}
-        keys = [r.record_key for r in record_identifiers]
-        
         # query database for list of ids
-        cursor = self.store.query(criteria={self.record_key:
+        cursor = self.store.query(criteria={"record_key":
                                                 {"$in": [r.record_key for r in record_identifiers]}},
-                                  properties=["record_key", "state_hash", "last_updated"])  # TODO check with Shyam here
+                                  properties=["record_key", "state_hash", "last_updated"])
 
-        while True:
-            try:
-                database_record_id: RecordIdentifier = RecordIdentifier.parse_obj(next(cursor))
-                # find the corresponding index in record_identifiers list and compare their state hash
-                index = memory_record_identifiers_log.get(database_record_id.record_key, -1)
-                assert index != -1, "ERROR: Something went wrong, record in database queried not found in memory"
-                memory_record_id = record_identifiers[index]
-                if memory_record_id.state_hash == database_record_id.state_hash:
-                    result[index] = False
-            except StopIteration:
-                break
-        return result
+        not_exists = object()
+        db_record_log = {doc["record_key"]: doc["state_hash"] for doc in cursor}
+        to_update_list = [recordID.state_hash != db_record_log.get(recordID.record_key, not_exists) for recordID in
+                          record_identifiers]
+        return [recordID for recordID, to_update in zip(record_identifiers, to_update_list) if to_update]
 
-    def shouldUpdateRecord(self, record_identifier: RecordIdentifier) -> bool:
-        """
-        - If you never seen it before --> return True
-        - If you've seen it before and the raw data has changed --> return True
-        - Otherwise --> return False
-
-        :param record_identifier: The Record to query if the database has it or not, or if its state has changed
-        :return:
-            True if you've seen the record before and the raw data has changed or you never seen the record before
-            False otherwise
-        """
-        record_in_data_base = self.store.query_one(criteria={self.record_key: record_identifier.record_key},
-                                                   properties=["record_key", "state_hash", "last_updated"])
-        if record_in_data_base is None:
-            return True
-        record_in_data_base = RecordIdentifier.parse_obj(record_in_data_base)
-        if record_in_data_base.state_hash != record_identifier.state_hash:
-            return True
-        else:
-            return False
-
-    def assimilate(self, path: Path, debug=False):
+    def assimilate(self, path: Path):
         """
         Main function that goes through each step and update the database
             - Step 1 Crawl through Path of the folder where data live to get RecordIdentifer Mapping
@@ -187,50 +156,21 @@ class Drone(MSONable):
         record_identifiers: List[RecordIdentifier] = self.read(path=path)  # step 1
 
         for rid in record_identifiers:
-            print("rid = {}, state_hash = {}".format(rid.record_key, rid.state_hash))
+            self.logger.debug(msg="Discovered rid = {}".format(rid.record_key))
 
-        update_mask: List[bool] = self.shouldUpdateRecords(record_identifiers)  # step 2
+        records_to_update = self.shouldUpdateRecords(record_identifiers)  # step 2
 
-        records_to_update = [recordID for recordID, update in zip(record_identifiers, update_mask) if update]
+        if len(records_to_update) == 0:
+            self.logger.debug(msg="No records need to be updated")
+        else:
+            for rid in records_to_update:
+                self.logger.debug(msg="Need to update rid = {}".format(rid.record_key))
 
         batched_data = [{**self.computeData(recordID=record_identifier), **record_identifier.dict()}
                         for record_identifier in records_to_update]  # Step 3 prepare record for update
 
         if len(batched_data) > 0:
-            if debug:
-                for b in batched_data:
-                    print("Updating Record With ID {}".format(b[self.record_key]))
             self.store.update(batched_data)  # step 5
 
-    def printDirectory(self, dir_path: Path, prefix: str = ''):
-
-        """
-            Cite: https://stackoverflow.com/questions/9727673/list-directory-tree-structure-in-python
-            A recursive generator, given a directory Path object
-            will yield a visual tree structure line by line
-            with each line prefixed by the same characters
-        """
-        # prefix components:
-        space = '    '
-        branch = '│   '
-        # pointers:
-        tee = '├── '
-        last = '└── '
-
-        def tree(dir_path: Path, prefix: str = ''):
-            """A recursive generator, given a directory Path object
-            will yield a visual tree structure line by line
-            with each line prefixed by the same characters
-            """
-            contents = list(dir_path.iterdir())
-            # contents each get pointers that are ├── with a final └── :
-            pointers = [tee] * (len(contents) - 1) + [last]
-            for pointer, path in zip(pointers, contents):
-                yield prefix + pointer + path.name
-                if path.is_dir():  # extend the prefix and recurse:
-                    extension = branch if pointer == tee else space
-                    # i.e. space because last, └── , above so no more |
-                    yield from tree(path, prefix=prefix + extension)
-
-        for line in tree(dir_path=dir_path, prefix=prefix):
-            print(line)
+        for d in batched_data:
+            self.logger.debug(msg="Updated rid = {}".format(d.get("record_key")))

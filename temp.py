@@ -90,3 +90,18 @@ Builder
     keep read and computeData
     any database related function can only happen in getUpdate and get_items
     anything that can be paralleled, should be in process
+"""
+
+
+"""
+Drone(Builder)
+
+Inherit from Builder
+
+Builder.run()
+
+put things that can be put into process_item
+
+mrun, run builder in parallel
+
+"""

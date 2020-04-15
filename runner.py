@@ -23,5 +23,6 @@ simple_builder_drone = SimpleBuilderDrone(store=mongo_store, path=simple_path)
 simple_builder_drone.connect()
 
 # The line below is essentially the function assimilate in Drone.py. So do we still need the assimilate function?
-simple_builder_drone.update_targets(simple_builder_drone.get_items())
+simple_builder_drone.update_targets(simple_builder_drone.get_items([process]))
+
 simple_builder_drone.finalize()

@@ -1,13 +1,14 @@
 from pydantic import BaseModel, Field
 from pathlib import PosixPath, Path
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Iterable
 from monty.json import MSONable
 import hashlib
 from abc import abstractmethod
 import os.path
 import logging
-
+from maggma.core import Builder
+from typing import Any
 class Document(BaseModel):
     path: PosixPath = Field(..., title="Path of this file")
     name: str = Field(..., title="File name")
@@ -49,7 +50,7 @@ class RecordIdentifier(BaseModel):
         return str(digest.hexdigest())
 
 
-class Drone(MSONable):
+class Drone(Builder):
     """
     An abstract drone that handles operations with database
     User have to implement all abstract methods to specify the data that they want to use to interact with this class
@@ -70,11 +71,12 @@ class Drone(MSONable):
      - Step 5: Inject into the data base
     """
 
-    def __init__(self,
-                 store):
+    def __init__(self,store, path):
         self.store = store
         self.logger = logging.getLogger(type(self).__name__)
         self.logger.addHandler(logging.NullHandler())
+        self.path = path
+        super().__init__(sources=[], targets=store)
 
     @abstractmethod
     def compute_record_identifier_key(self, doc: Document) -> str:
@@ -173,3 +175,31 @@ class Drone(MSONable):
 
         for d in batched_data:
             self.logger.debug(msg="Updated rid = {}".format(d.get("record_key")))
+
+    def get_items(self) -> Iterable:
+        record_identifiers: List[RecordIdentifier] = self.read(path=self.path)
+        # So should we do database query natively in this method?
+        records_to_update = self.should_update_records(record_identifiers)
+        return records_to_update
+
+    def update_targets(self, items: List):
+        self.logger.info("Starting update in {} Builder".format(self.__class__.__name__))
+
+        batched_data = [{**self.compute_data(recordID=record_identifier), **record_identifier.dict()}
+                        for record_identifier in items]
+        if len(batched_data) > 0:
+            self.logger.info("Updating {} items".format(len(batched_data)))
+            self.store.update(batched_data)
+        else:
+            self.logger.info("There are no items to update")
+
+    def process_item(self, item: Any) -> Any:
+        """
+        move list comprehension in update_targets here
+
+        :param item:
+        :return:
+        """
+        pass
+
+

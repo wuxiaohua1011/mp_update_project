@@ -10,7 +10,7 @@ class SimpleBuilderDrone(Drone, Builder):
     """
     A Simple Drone that integrates Builder to
     1. read local files
-    2. query database for similar files
+    2. query database for similar files (Builder?)
     3. check whether database files needs to be updated
     4. update the database file if needed
     5. Do the above with multi-threading(Builder's job)
@@ -99,6 +99,9 @@ class SimpleBuilderDrone(Drone, Builder):
         records_to_update = self.should_update_records(record_identifiers)
         return records_to_update
 
+    def process_item(self, item: Any) -> Any:
+        pass
+
     def update_targets(self, items: List):
         """
         THIS IS AN INHERITED METHOD
@@ -108,7 +111,7 @@ class SimpleBuilderDrone(Drone, Builder):
 
         :param items: list of items to convert into data, can also include meta data
         :return:
-            None
+            None`
         """
         self.logger.info("Starting update in {} Builder".format(self.__class__.__name__))
         batched_data = [{**self.compute_data(recordID=record_identifier), **record_identifier.dict()}

@@ -8,8 +8,8 @@ import re
 
 class SimpleBibDrone(Drone):
     def __init__(self,
-                 store, logger):
-        super().__init__(store=store, logger=logger)
+                 store, path):
+        super().__init__(store=store, path)
 
     def compute_record_identifier(self, record_key: str, doc_list: List[Document]) -> RecordIdentifier:
         """
@@ -56,7 +56,7 @@ class SimpleBibDrone(Drone):
 
     def compute_data(self, recordID: RecordIdentifier) -> Dict:
         """
-        erturn the mapping of NAME_OF_DATA -> DATA
+        return the mapping of NAME_OF_DATA -> DATA
 
         :param recordID: recordID that needs to be re-saved
         :return:

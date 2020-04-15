@@ -71,14 +71,13 @@ class Drone(MSONable):
     """
 
     def __init__(self,
-                 store,
-                 logger : logging.Logger = logging.getLogger(__name__)):
+                 store):
         self.store = store
-        self.logger = logger
-
+        self.logger = logging.getLogger(type(self).__name__)
+        self.logger.addHandler(logging.NullHandler())
 
     @abstractmethod
-    def computeRecordIdentifierKey(self, doc: Document) -> str:
+    def compute_record_identifier_key(self, doc: Document) -> str:
         """
         Compute the RecordIdentifier key that this document correspond to
         :param doc: document which the record identifier key will be inferred from
@@ -102,7 +101,7 @@ class Drone(MSONable):
         raise NotImplementedError
 
     @abstractmethod
-    def computeData(self, recordID: RecordIdentifier) -> Dict:
+    def compute_data(self, recordID: RecordIdentifier) -> Dict:
         """
         User can specify what raw data they want to save from the Documents that this recordID refers to
 
@@ -119,7 +118,7 @@ class Drone(MSONable):
         """
         raise NotImplementedError
 
-    def shouldUpdateRecords(self, record_identifiers: List[RecordIdentifier]) -> List[RecordIdentifier]:
+    def should_update_records(self, record_identifiers: List[RecordIdentifier]) -> List[RecordIdentifier]:
         """
         Batch query database by computing all the keys and send them at once
         :param record_identifiers: all the record_identifiers that need to fetch from database
@@ -158,7 +157,7 @@ class Drone(MSONable):
         for rid in record_identifiers:
             self.logger.debug(msg="Discovered rid = {}".format(rid.record_key))
 
-        records_to_update = self.shouldUpdateRecords(record_identifiers)  # step 2
+        records_to_update = self.should_update_records(record_identifiers)  # step 2
 
         if len(records_to_update) == 0:
             self.logger.debug(msg="No records need to be updated")
@@ -166,7 +165,7 @@ class Drone(MSONable):
             for rid in records_to_update:
                 self.logger.debug(msg="Need to update rid = {}".format(rid.record_key))
 
-        batched_data = [{**self.computeData(recordID=record_identifier), **record_identifier.dict()}
+        batched_data = [{**self.compute_data(recordID=record_identifier), **record_identifier.dict()}
                         for record_identifier in records_to_update]  # Step 3 prepare record for update
 
         if len(batched_data) > 0:

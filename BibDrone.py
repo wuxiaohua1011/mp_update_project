@@ -11,7 +11,7 @@ class SimpleBibDrone(Drone):
                  store, logger):
         super().__init__(store=store, logger=logger)
 
-    def computeRecordIdentifier(self, record_key: str, doc_list: List[Document]) -> RecordIdentifier:
+    def compute_record_identifier(self, record_key: str, doc_list: List[Document]) -> RecordIdentifier:
         """
         Compute meta data for this list of documents, and generate a RecordIdentifier object
         :param record_key: record keys that indicate a record
@@ -25,7 +25,7 @@ class SimpleBibDrone(Drone):
         recordIdentifier.state_hash = recordIdentifier.computeStateHashes()
         return recordIdentifier
 
-    def generateDocuments(self, folder_path: Path) -> List[Document]:
+    def generate_documents(self, folder_path: Path) -> List[Document]:
         """
         Generate documents by going over the current directory:
         Note: Assumes that there's no folder in the current directory
@@ -48,13 +48,13 @@ class SimpleBibDrone(Drone):
         :return:
 
         """
-        documents: List[Document] = self.generateDocuments(folder_path=path)
-        log = self.organizeDocuments(documents=documents)
-        record_identifiers = [self.computeRecordIdentifier(record_key, doc_list)
+        documents: List[Document] = self.generate_documents(folder_path=path)
+        log = self.organize_documents(documents=documents)
+        record_identifiers = [self.compute_record_identifier(record_key, doc_list)
                               for record_key, doc_list in log.items()]
         return record_identifiers
 
-    def computeData(self, recordID: RecordIdentifier) -> Dict:
+    def compute_data(self, recordID: RecordIdentifier) -> Dict:
         """
         erturn the mapping of NAME_OF_DATA -> DATA
 
@@ -82,7 +82,7 @@ class SimpleBibDrone(Drone):
                     record["text"] = s
         return record
 
-    def computeRecordIdentifierKey(self, doc: Document) -> str:
+    def compute_record_identifier_key(self, doc: Document) -> str:
         """
         Compute the recordIdentifier key by interpreting the name
         :param doc:
@@ -92,7 +92,7 @@ class SimpleBibDrone(Drone):
         ID, ftype = postfix.split(sep=".", maxsplit=1)
         return ID
 
-    def organizeDocuments(self, documents: List[Document]) -> Dict[str, List[Document]]:
+    def organize_documents(self, documents: List[Document]) -> Dict[str, List[Document]]:
         """
         a dictionary that maps RecordIdentifierKey -> [File Paths]
             ex:
@@ -105,7 +105,7 @@ class SimpleBibDrone(Drone):
         """
         log = dict()
         for doc in documents:
-            key = self.computeRecordIdentifierKey(doc)
+            key = self.compute_record_identifier_key(doc)
             log[key] = log.get(key, []) + [doc]
         return log
 
@@ -113,7 +113,7 @@ class ComplexBibDrone(SimpleBibDrone):
     def __init__(self, store, logger):
         super().__init__(store=store, logger=logger)
 
-    def computeRecordIdentifierKey(self, doc: Document) -> str:
+    def compute_record_identifier_key(self, doc: Document) -> str:
         """
         THIS IS SHADY.
 
@@ -134,7 +134,7 @@ class ComplexBibDrone(SimpleBibDrone):
         key = result[0]
         return key
 
-    def generateDocuments(self, folder_path: Path) -> List[Document]:
+    def generate_documents(self, folder_path: Path) -> List[Document]:
         result: List[Document] = []
         for path, dirs, files in os.walk(folder_path.as_posix()):
             for f in files:
@@ -144,22 +144,22 @@ class ComplexBibDrone(SimpleBibDrone):
         return result
 
     def read(self, path: Path) -> List[RecordIdentifier]:
-        documents = self.generateDocuments(path)
-        mapping = self.organizeDocuments(documents)
-        record_identifiers: List[RecordIdentifier] = [self.computeRecordIdentifier(key, docs)
+        documents = self.generate_documents(path)
+        mapping = self.organize_documents(documents)
+        record_identifiers: List[RecordIdentifier] = [self.compute_record_identifier(key, docs)
                                                       for key, docs in mapping.items()]
         return record_identifiers
 
-    def computeData(self, recordID: RecordIdentifier) -> Dict:
-        return super().computeData(recordID)
+    def compute_data(self, recordID: RecordIdentifier) -> Dict:
+        return super().compute_data(recordID)
 
-    def organizeDocuments(self, documents: List[Document]) -> Dict[str, List[Document]]:
+    def organize_documents(self, documents: List[Document]) -> Dict[str, List[Document]]:
         """
         Organize the documents
         :param documents:
         :return:
         """
-        return super().organizeDocuments(documents)
+        return super().organize_documents(documents)
 
 
 """

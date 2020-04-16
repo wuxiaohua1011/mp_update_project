@@ -2,13 +2,12 @@ from pydantic import BaseModel, Field
 from pathlib import PosixPath, Path
 from datetime import datetime
 from typing import Dict, List, Optional, Iterable
-from monty.json import MSONable
 import hashlib
 from abc import abstractmethod
 import os.path
-import logging
 from maggma.core import Builder
-from typing import Any
+
+
 class Document(BaseModel):
     path: PosixPath = Field(..., title="Path of this file")
     name: str = Field(..., title="File name")
@@ -26,7 +25,7 @@ class RecordIdentifier(BaseModel):
     state_hash: Optional[str] = Field(None, title="Hash of the state of the documents in this Record")
 
     @property
-    def parentDirectory(self) -> Path:
+    def parent_directory(self) -> Path:
         """
         root most directory that documnents in this record share
         :return:
@@ -34,7 +33,7 @@ class RecordIdentifier(BaseModel):
         paths = [doc.path.as_posix() for doc in self.documents]
         return Path(os.path.commonprefix(paths))
 
-    def computeStateHashes(self) -> str:
+    def compute_state_hash(self) -> str:
         """
         compute the hash of the state of the documents in this record
         :param doc_list: list of documents
@@ -71,10 +70,8 @@ class Drone(Builder):
      - Step 5: Inject into the data base
     """
 
-    def __init__(self,store, path):
+    def __init__(self, store, path: Path):
         self.store = store
-        self.logger = logging.getLogger(type(self).__name__)
-        self.logger.addHandler(logging.NullHandler())
         self.path = path
         super().__init__(sources=[], targets=store)
 
@@ -141,65 +138,52 @@ class Drone(Builder):
                           record_identifiers]
         return [recordID for recordID, to_update in zip(record_identifiers, to_update_list) if to_update]
 
-    def assimilate(self, path: Path):
+    """
+    Don't need it probably, turn it into just read the recordIDs, don't update the database
+    """
+
+    def assimilate(self, path: Path) -> List[RecordIdentifier]:
         """
-        Main function that goes through each step and update the database
-            - Step 1 Crawl through Path of the folder where data live to get RecordIdentifer Mapping
-            - Step 2: For each RecordIdentifier from Step 1,  determine if it should be updated or not
-            - Step 3: If needed, Process the Record (convert the Record into MongoDB data) (abstract function)
-            - Step 4: Inject back the meta data
-            - Step 5: Inject into the data base
+        Function mainly for debugging purpose. It will
+        1. read file in the path specified
+        2. convert them into recordIdentifier
+        3. return the converted recordIdentifiers
+
         :param path: path in which files are read
-        :param debug: if true, print hint information for program status
         :return:
-            None
+            list of record Identifiers
         """
         record_identifiers: List[RecordIdentifier] = self.read(path=path)  # step 1
-
-        for rid in record_identifiers:
-            self.logger.debug(msg="Discovered rid = {}".format(rid.record_key))
-
-        records_to_update = self.should_update_records(record_identifiers)  # step 2
-
-        if len(records_to_update) == 0:
-            self.logger.debug(msg="No records need to be updated")
-        else:
-            for rid in records_to_update:
-                self.logger.debug(msg="Need to update rid = {}".format(rid.record_key))
-
-        batched_data = [{**self.compute_data(recordID=record_identifier), **record_identifier.dict()}
-                        for record_identifier in records_to_update]  # Step 3 prepare record for update
-
-        if len(batched_data) > 0:
-            self.store.update(batched_data)  # step 5
-
-        for d in batched_data:
-            self.logger.debug(msg="Updated rid = {}".format(d.get("record_key")))
+        return record_identifiers
 
     def get_items(self) -> Iterable:
+        self.logger.debug("Starting get_items in {} Builder".format(self.__class__.__name__))
         record_identifiers: List[RecordIdentifier] = self.read(path=self.path)
-        # So should we do database query natively in this method?
         records_to_update = self.should_update_records(record_identifiers)
         return records_to_update
 
     def update_targets(self, items: List):
-        self.logger.info("Starting update in {} Builder".format(self.__class__.__name__))
-
-        batched_data = [{**self.compute_data(recordID=record_identifier), **record_identifier.dict()}
-                        for record_identifier in items]
-        if len(batched_data) > 0:
-            self.logger.info("Updating {} items".format(len(batched_data)))
-            self.store.update(batched_data)
-        else:
-            self.logger.info("There are no items to update")
-
-    def process_item(self, item: Any) -> Any:
         """
-        move list comprehension in update_targets here
+        Receive a list of items to update, update the items
 
-        :param item:
+        Assume that each item are in the correct format
+
+        :param items: List of items to update
         :return:
+            None
         """
-        pass
+        if len(items) > 0:
+            self.logger.debug("Updating {} items".format(len(items)))
+            self.store.update(items)
+        else:
+            self.logger.debug("There are no items to update")
 
+    def process_item(self, item: RecordIdentifier) -> Dict:  # type: ignore
+        """
+        compute the item to update
 
+        :param item: item to update
+        :return:
+            result from expanding the item
+        """
+        return {**self.compute_data(recordID=item), **item.dict()}

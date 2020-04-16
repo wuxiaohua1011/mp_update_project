@@ -104,4 +104,6 @@ put things that can be put into process_item
 
 mrun, run builder in parallel
 
+write some tests
+
 """

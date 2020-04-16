@@ -7,9 +7,8 @@ import re
 
 
 class SimpleBibDrone(Drone):
-    def __init__(self,
-                 store, path):
-        super().__init__(store=store, path)
+    def __init__(self, store, path):
+        super().__init__(store=store, path=path)
 
     def compute_record_identifier(self, record_key: str, doc_list: List[Document]) -> RecordIdentifier:
         """
@@ -22,7 +21,7 @@ class SimpleBibDrone(Drone):
         recordIdentifier = RecordIdentifier(last_updated=datetime.now(),
                                             documents=doc_list,
                                             record_key=record_key)
-        recordIdentifier.state_hash = recordIdentifier.computeStateHashes()
+        recordIdentifier.state_hash = recordIdentifier.compute_state_hash()
         return recordIdentifier
 
     def generate_documents(self, folder_path: Path) -> List[Document]:
@@ -109,9 +108,10 @@ class SimpleBibDrone(Drone):
             log[key] = log.get(key, []) + [doc]
         return log
 
+
 class ComplexBibDrone(SimpleBibDrone):
-    def __init__(self, store, logger):
-        super().__init__(store=store, logger=logger)
+    def __init__(self, store, path):
+        super().__init__(store=store, path=path)
 
     def compute_record_identifier_key(self, doc: Document) -> str:
         """

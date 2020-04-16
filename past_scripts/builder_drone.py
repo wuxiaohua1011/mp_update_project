@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Iterable, Dict
+from typing import List, Iterable, Dict, Any
 import os
 from drone import Drone, RecordIdentifier, Document
 from maggma.core import Builder
@@ -22,7 +22,7 @@ class SimpleBuilderDrone(Drone, Builder):
         :param store: The database to query
         :param path: local file path to scan
         """
-        Drone.__init__(self, store)  # So why does Drone need to take care of store?
+        Drone.__init__(self, store, path)  # So why does Drone need to take care of store?
         Builder.__init__(self, sources=store, targets=store)
         # TODO: PROBLEM: Builder has self.logger, Drone also has self.logger
         # With current order, I think self.logger will be overwritten by
@@ -166,5 +166,5 @@ class SimpleBuilderDrone(Drone, Builder):
         record_identifier = RecordIdentifier(last_updated=datetime.now(),
                                              documents=doc_list,
                                              record_key=record_key)
-        record_identifier.state_hash = record_identifier.computeStateHashes()
+        record_identifier.state_hash = record_identifier.compute_state_hash()
         return record_identifier

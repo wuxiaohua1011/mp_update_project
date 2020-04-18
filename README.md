@@ -21,8 +21,8 @@ Project's Goal is to explore how to make the Material Project's backend system t
             -  Note: You can use start instead of run. start will start MongoDB automatically when you login into your Macbook. I prefer run since I don’t want MongoDB to be running all the time.
         - To Stop:
             - brew services stop mongodb-community
-        
-    2. Instruction: 
+
+    2. Instruction:
 ```
 A drone has a concept of record
     - a record might have multiple documents, or it could be a folder
@@ -34,7 +34,7 @@ A drone has a concept of record
 - Build file relationship
     - they could be in different folder, same folder, etc
     - ** Assume we have all of them in the same folder for now
-- NOTE: Build it s.t. the drone class is very abstract, 
+- NOTE: Build it s.t. the drone class is very abstract,
     - the comparison func should be inherited, just as the QueryOperator
     - make it modular, we are trying to build something abstract
 ```
@@ -68,7 +68,7 @@ Problems:
     - make the `endpointcluster.py` in the main maggma folder(where builders.py is)
     - Done, but need to ask Shyam how to organize these files, and also where exactly does the dependency comes in
 2. pagination -- dependency
-    - fastapgit i -> dependency   
+    - fastapgit i -> dependency
     - HATEOS
     - Pagination Dependency added
         - put the dependency class in `example_models.py` because all endpoints should be using common pagination
@@ -78,7 +78,7 @@ Problems:
 1. updating maggma branch.
     - encountered problem with writing unnittest -- it does not recognize root endpoint for some reason but does recognize materials endpoint
     - understood and implemneted a dummy pydantic graphql, trying to think about how to plug it in for our project
-    
+
 
 ### Nov 11, 2019
 1. Skip and limit in constructor and apply them throughout different functions that requires it
@@ -106,7 +106,7 @@ Problems:
         -         # https://www.errietta.me/blog/python-fastapi-intro/
         -         # https://fastapi.tiangolo.com/tutorial/request-forms/
 
-### Oct, 25, 2019 
+### Oct, 25, 2019
 - pass in data_type(ex Material) into the Endpoint __init__
     - make sure all of the get methods follow the data_type
     - implement dynamic dispatch --> if the data attribute is in the data_type, then create the route
@@ -119,7 +119,7 @@ Problems:
         - hint: pymongo has a function to do it, its in maggma
         - if i want to search it, how do i know what different options do i have?
         - design it such that its not 1000000 different routes
-       
+
 
 ### Oct 18, 2019
 - Deploy app using APIRouter
@@ -131,7 +131,7 @@ Problems:
 - Need help with python file structure.... idk how to resolve this issue....
     - nvm, got it
 
-    
+
 
 ### Sep 27, 2019
 - Use choices for crystal system
@@ -140,19 +140,19 @@ Problems:
 - Switch to using Memory store to hold your documents and for all your searches
     - Used JSONStore, which inherits MemoryStore
 - Try JSONStore as well
-    - JSONStore turns out to be really easy to use. 
+    - JSONStore turns out to be really easy to use.
     - install the [maggma](https://github.com/materialsproject/maggma/blob/master/maggma/) repository by source
     - see main.py for usage example, specifically the `get_on_task_id` function
     - other function has not been modified yet, need to review if PyMongo already have some similar functions so that I am not re-inventing the wheel
 - How to see model definition in swagger
     - Done
-    - It doesn't seem like GET would return any schema, but PUT does. 
+    - It doesn't seem like GET would return any schema, but PUT does.
     - To see the result, please do
         - `uvicorn main:app --reload`
         - go to `http://127.0.0.1:8000/docs`
         - OR `http://127.0.0.1:8000/redoc`
-5. Wildcards in chemsys and formula: Ba*O3 
-    - should match BaTiO3, BaEuO3, but not BaTi2O3, Ba-*-O should match Ba-Ti-O, Ba-Eu-O, etc. 
+5. Wildcards in chemsys and formula: Ba*O3
+    - should match BaTiO3, BaEuO3, but not BaTi2O3, Ba-*-O should match Ba-Ti-O, Ba-Eu-O, etc.
     - Have not gotten to this part yet
 
 
@@ -173,13 +173,13 @@ Problems:
 
 
 #### Sep 13, 2019
-- Built a simple and rudimentary model based on the data Shyam provided. 
+- Built a simple and rudimentary model based on the data Shyam provided.
     - The Materials model is located at models.py, using Pydantic
 - Built a simple example of "search on chemsys", file located at `miscellaneous/chemsys_search.py`
     - To test:
         1. `pytest chemsys_search.py`
 - Built a simple endpoint to serve materials docs based on task_id and to search based on chemsys
-    - To run: 
+    - To run:
         1. `uvicorn main:app --reload`
         2. For serve based on task_id, go to your favorite browser, and type `http://127.0.0.1:8000/task_id/mp-1008501`
         3. For search based on chemsys, go to your favorite browser, and type `http://127.0.0.1:8000/materials/?chemsys=Be`
@@ -187,9 +187,8 @@ Problems:
 
 - Initialized this Github Repository and added some gitignores
 #### Sep 4, 2019
-- Looked through and did some of the tutorials for 
+- Looked through and did some of the tutorials for
     - [FastAPI](https://github.com/tiangolo/fastapi)
     - [Pydantic](https://pydantic-docs.helpmanual.io/)
     - [Dash](https://plot.ly/dash/)
 - Set up a temporary meeting time with Shyam due to class scheduling is still in progress
-

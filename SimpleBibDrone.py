@@ -22,7 +22,9 @@ class SimpleBibDrone(Drone):
     def __init__(self, store, path):
         super().__init__(store=store, path=path)
 
-    def compute_record_identifier(self, record_key: str, doc_list: List[Document]) -> RecordIdentifier:
+    def compute_record_identifier(
+        self, record_key: str, doc_list: List[Document]
+    ) -> RecordIdentifier:
         """
         Compute meta data for this list of documents, and generate a RecordIdentifier object
         :param record_key: record keys that indicate a record
@@ -30,9 +32,9 @@ class SimpleBibDrone(Drone):
         :return:
             RecordIdentifier that represent this doc_list
         """
-        recordIdentifier = RecordIdentifier(last_updated=datetime.now(),
-                                            documents=doc_list,
-                                            record_key=record_key)
+        recordIdentifier = RecordIdentifier(
+            last_updated=datetime.now(), documents=doc_list, record_key=record_key
+        )
         recordIdentifier.state_hash = recordIdentifier.compute_state_hash()
         return recordIdentifier
 
@@ -59,8 +61,10 @@ class SimpleBibDrone(Drone):
         """
         documents: List[Document] = self.generate_documents(folder_path=path)
         log = self.organize_documents(documents=documents)
-        record_identifiers = [self.compute_record_identifier(record_key, doc_list)
-                              for record_key, doc_list in log.items()]
+        record_identifiers = [
+            self.compute_record_identifier(record_key, doc_list)
+            for record_key, doc_list in log.items()
+        ]
         return record_identifiers
 
     def compute_data(self, recordID: RecordIdentifier) -> Dict:
@@ -81,12 +85,12 @@ class SimpleBibDrone(Drone):
 
         for document in recordID.documents:
             if "citations" in document.name:
-                with open(document.path.as_posix(), 'r') as file:
+                with open(document.path.as_posix(), "r") as file:
                     s = file.read()
                     record["citations"] = s
 
             if "text" in document.name:
-                with open(document.path.as_posix(), 'r') as file:
+                with open(document.path.as_posix(), "r") as file:
                     s = file.read()
                     record["text"] = s
         return record
@@ -101,7 +105,9 @@ class SimpleBibDrone(Drone):
         ID, ftype = postfix.split(sep=".", maxsplit=1)
         return ID
 
-    def organize_documents(self, documents: List[Document]) -> Dict[str, List[Document]]:
+    def organize_documents(
+        self, documents: List[Document]
+    ) -> Dict[str, List[Document]]:
         """
         a dictionary that maps RecordIdentifierKey -> [File Paths]
             ex:
@@ -112,7 +118,7 @@ class SimpleBibDrone(Drone):
         :param documents:
         :return:
         """
-        log = dict()
+        log: Dict = dict()
         for doc in documents:
             key = self.compute_record_identifier_key(doc)
             log[key] = log.get(key, []) + [doc]
@@ -120,7 +126,9 @@ class SimpleBibDrone(Drone):
 
 
 if __name__ == "__main__":
-    mongo_store = MongoStore(database="drone_test", collection_name="drone_test", key="record_key")
+    mongo_store = MongoStore(
+        database="drone_test", collection_name="drone_test", key="record_key"
+    )
     simple_path = Path.cwd() / "data" / "example1"
     simple_bib_drone = SimpleBibDrone(store=mongo_store, path=simple_path)
 

@@ -9,9 +9,11 @@ from maggma.core import Builder
 
 
 class Document(BaseModel):
+    """
+    Represent a file
+    """
     path: PosixPath = Field(..., title="Path of this file")
     name: str = Field(..., title="File name")
-    is_dir: bool = False
 
 
 class RecordIdentifier(BaseModel):
@@ -51,23 +53,28 @@ class RecordIdentifier(BaseModel):
 
 class Drone(Builder):
     """
-    An abstract drone that handles operations with database
+    An abstract drone that handles operations with database, using Builder to support multi-threadding
     User have to implement all abstract methods to specify the data that they want to use to interact with this class
 
-
+    Note: All embarrassingly parallel function should be in process_items
+    Note: The steps of a Drone can be divided into roughly 5 steps
     - Step 1(readRecord):
-        - Crawl through Path of the folder where data live
+        - Crawl through Path of the folder where data live (User has to implement the crawling function)
             - it will return Record of  (Already in method 2)
                 (cite.bibtex, data.txt)
                 (cite2.bibtex, text-2.txt)
                 (citations-3.bibtex, ) ...
-     - Step 2: Takes a list of Record (from the result above), and say if it should be updated or not
+     - Step 2: Takes a list of Record (from the result above), and return a list of Record that needs to be
+                updated by querying the database
         - If you've seen it before and the raw data has changed --> return True
         - If you never seen it before --> return True
         - Otherwise --> return False
-     - Step 3: Process the Record (convert the Record into MongoDB data) (abstract function)
+     - Step 3: Process the Record (convert the Record into MongoDB data) (abstract function) (Parallel function
+                implemented in process_item)
      - Step 4: Inject back the meta data to see if the Record if needed to be updated
      - Step 5: Inject into the data base
+
+     For sample usage, please see SimpleBibDrone.py
     """
 
     def __init__(self, store, path: Path):
@@ -125,9 +132,6 @@ class Drone(Builder):
             boolean mask of whether the record_identifier at that index require update
         """
         # initialize results with len(record_identifiers) and each value True indicating all entries needs update
-
-        # build log for fast referecing. Mapping of record_key -> (index_in_record_identifiers)
-        # query database for list of ids
         cursor = self.store.query(criteria={"record_key":
                                                 {"$in": [r.record_key for r in record_identifiers]}},
                                   properties=["record_key", "state_hash", "last_updated"])
@@ -137,10 +141,6 @@ class Drone(Builder):
         to_update_list = [recordID.state_hash != db_record_log.get(recordID.record_key, not_exists) for recordID in
                           record_identifiers]
         return [recordID for recordID, to_update in zip(record_identifiers, to_update_list) if to_update]
-
-    """
-    Don't need it probably, turn it into just read the recordIDs, don't update the database
-    """
 
     def assimilate(self, path: Path) -> List[RecordIdentifier]:
         """

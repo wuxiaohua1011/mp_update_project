@@ -84,7 +84,7 @@ class Drone(Builder):
      - Step 4: Inject back the meta data to see if the Record if needed to be updated
      - Step 5: Inject into the data base
 
-     For sample usage, please see SimpleBibDrone.py
+     For sample usage, please see simpleBibDrone.py
     """
 
     def __init__(self, store, path: Path):
@@ -149,7 +149,7 @@ class Drone(Builder):
                 "record_key": {"$in": [r.record_key for r in record_identifiers]}
             },
             properties=["record_key", "state_hash", "last_updated"],
-        )
+        )  # TODO can't we do something here?
 
         not_exists = object()
         db_record_log = {doc["record_key"]: doc["state_hash"] for doc in cursor}
